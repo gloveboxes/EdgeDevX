@@ -5,7 +5,7 @@
 
 #include "dx_utilities.h"
 #include "stdbool.h"
-#include "../../AzureSphereRemoteX/applibs/pwm.h"
+#include "applibs/pwm.h"
 #include <unistd.h>
 
 typedef struct DX_PWM_CONTROLLER {

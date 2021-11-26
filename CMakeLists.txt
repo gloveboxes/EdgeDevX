@@ -30,6 +30,9 @@ set(ALL_FILES
 ################################################################################
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
+# Following line required for Azure Sphere Remote
+target_include_directories(${PROJECT_NAME} PUBLIC ../AzureSphereRemoteX )
+
 # Set options for Azure IoT SDK C lib
 set(use_amqp OFF CACHE  BOOL "Set amqp off" FORCE )
 set(use_http OFF CACHE  BOOL "Set http off" FORCE )

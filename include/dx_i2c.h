@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include "../../AzureSphereRemoteX/applibs/i2c.h"
+#include "applibs/i2c.h"
 
 typedef int I2C_InterfaceId;
 
