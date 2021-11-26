@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../../AzureSphere.Remote/applibs/gpio.h"
+#include "../../AzureSphereRemoteX/applibs/gpio.h"
 
 // typedef int GPIO_Value_Type;
 // typedef bool GPIO_Value;
