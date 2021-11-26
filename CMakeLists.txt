@@ -30,7 +30,7 @@ set(ALL_FILES
 ################################################################################
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
-# Following line required for Azure Sphere Remote
+# Following line required for Azure Sphere RemoteX.Client library
 target_include_directories(${PROJECT_NAME} PUBLIC ../AzureSphereRemoteX.Client )
 
 # Set options for Azure IoT SDK C lib
