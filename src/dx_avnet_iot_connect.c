@@ -144,7 +144,7 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT ReceiveMessageCallback(IOTHUB_MESSAGE_HA
 
     // Using the mesage string get a pointer to the rootMessage
     JSON_Value *rootMessage = NULL;
-    rootMessage = json_parse_string(str_msg);
+    rootMessage = json_parse_string((const char *)str_msg);
     if (rootMessage == NULL) {
         Log_Debug("[AVT IoTConnect] Cannot parse the string as JSON content.\n");
         goto cleanup;
@@ -240,7 +240,7 @@ bool dx_avnetJsonSerializePayload(const char *originalJsonMessage, char *modifie
 
     bool result = false;
 
-    // Verify that the incomming JSON is valid
+    // Verify that the incoming JSON is valid
     JSON_Value *rootProperties = NULL;
     rootProperties = json_parse_string(originalJsonMessage);
     if (rootProperties != NULL) {
