@@ -13,6 +13,15 @@ static const char *cmdLineArgsUsageText =
 /// </summary>
 bool dx_configParseCmdLineArguments(int argc, char *argv[], DX_USER_CONFIG *userConfig)
 {
+
+#if defined IOT_HUB_HOST_NAME && defined IOT_HUB_DEVICE_ID && defined IOT_HUB_SHARED_ACCESS_KEY
+    userConfig->connectionType = DX_CONNECTION_TYPE_STRING;
+    userConfig->hostname = IOT_HUB_HOST_NAME;
+    userConfig->device_id = IOT_HUB_DEVICE_ID;
+    userConfig->shared_access_key = IOT_HUB_SHARED_ACCESS_KEY;
+    return true;
+#else
+
     bool result = true;
     int option = 0;
     static const struct option cmdLineOptions[] = {
@@ -91,4 +100,5 @@ bool dx_configParseCmdLineArguments(int argc, char *argv[], DX_USER_CONFIG *user
     }
 
     return result;
+#endif
 }
