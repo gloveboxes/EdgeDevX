@@ -8,7 +8,7 @@
 #include <string.h>
 #include <uv.h>
 
-#define DX_TIMER_HANDLER_BEGIN(name)                                \
+#define DX_TIMER_HANDLER_BEGIN(name)                             \
     void name(EventLoopTimer *eventLoopTimer)                    \
     {                                                            \
         if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0)     \
