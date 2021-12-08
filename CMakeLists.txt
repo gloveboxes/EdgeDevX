@@ -54,6 +54,16 @@ target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/c-utility/inc)
 target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/umock-c/inc)
 target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/azure-macro-utils-c/inc)
 
+# The following config was required for macOS homebrew installed UV, UUID and SSL libs
+# brew install --HEAD libuv
+# brew install openssl
+# brew install ossp-uuid
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_include_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/include)
+    target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/lib)
+    target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/Cellar/openssl@3/3.0.0_1/lib/)
+endif()
+
 target_link_libraries (${PROJECT_NAME} 
     uv 
     pthread 
