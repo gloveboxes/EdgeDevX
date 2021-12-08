@@ -8,7 +8,18 @@
 #include "dx_gpio.h"
 #include <iothub_device_client_ll.h>
 
-typedef enum {
+#define DX_DEFINE_DEVICETWIN_HANDLER(name, deviceTwinBinding) \
+	void name(DX_DEVICE_TWIN_BINDING *deviceTwinBinding)      \
+	{
+
+#define DX_END_DEVICETWIN_HANDLER \
+	}
+
+#define DX_DECLARE_DEVICETWIN_HANDLER(name) \
+	void name(DX_DEVICE_TWIN_BINDING *deviceTwinBinding);
+
+typedef enum
+{
 	DX_TYPE_UNKNOWN = 0,
 	DX_DEVICE_TWIN_BOOL = 1,
 	DX_DEVICE_TWIN_FLOAT = 2,
@@ -17,13 +28,14 @@ typedef enum {
 	DX_DEVICE_TWIN_STRING = 5
 } DX_DEVICE_TWIN_TYPE;
 
-typedef struct _deviceTwinBinding {
-	const char* propertyName;
-	void* propertyValue;
+typedef struct _deviceTwinBinding
+{
+	const char *propertyName;
+	void *propertyValue;
 	int propertyVersion;
 	bool propertyUpdated;
 	DX_DEVICE_TWIN_TYPE twinType;
-	void (*handler)(struct _deviceTwinBinding* deviceTwinBinding);
+	void (*handler)(struct _deviceTwinBinding *deviceTwinBinding);
 	void *context;
 } DX_DEVICE_TWIN_BINDING;
 
@@ -43,8 +55,7 @@ typedef enum
 /// <param name="state"></param>
 /// <param name="statusCode"></param>
 /// <returns></returns>
-bool dx_deviceTwinAckDesiredValue(DX_DEVICE_TWIN_BINDING* deviceTwinBinding, void* state, DX_DEVICE_TWIN_RESPONSE_CODE statusCode);
-
+bool dx_deviceTwinAckDesiredValue(DX_DEVICE_TWIN_BINDING *deviceTwinBinding, void *state, DX_DEVICE_TWIN_RESPONSE_CODE statusCode);
 
 /// <summary>
 /// Update device twin state.
@@ -52,7 +63,7 @@ bool dx_deviceTwinAckDesiredValue(DX_DEVICE_TWIN_BINDING* deviceTwinBinding, voi
 /// <param name="deviceTwinBinding"></param>
 /// <param name="state"></param>
 /// <returns></returns>
-bool dx_deviceTwinReportValue(DX_DEVICE_TWIN_BINDING* deviceTwinBinding, void* state);
+bool dx_deviceTwinReportValue(DX_DEVICE_TWIN_BINDING *deviceTwinBinding, void *state);
 
 /// <summary>
 /// Close all device twins, deallocate backing storage for each twin, and stop inbound and outbound device twin updates.
@@ -65,4 +76,4 @@ void dx_deviceTwinUnsubscribe(void);
 /// </summary>
 /// <param name="deviceTwins"></param>
 /// <param name="deviceTwinCount"></param>
-void dx_deviceTwinSubscribe(DX_DEVICE_TWIN_BINDING* deviceTwins[], size_t deviceTwinCount);
+void dx_deviceTwinSubscribe(DX_DEVICE_TWIN_BINDING *deviceTwins[], size_t deviceTwinCount);

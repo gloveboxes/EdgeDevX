@@ -8,7 +8,7 @@
 #include <string.h>
 #include <uv.h>
 
-#define DX_TIMER_HANDLER_BEGIN(name)                             \
+#define DX_DEFINE_TIMER_HANDLER(name)                            \
     void name(EventLoopTimer *eventLoopTimer)                    \
     {                                                            \
         if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0)     \
@@ -17,7 +17,11 @@
             return;                                              \
         }
 
-#define DX_TIMER_HANDLER_END }
+#define DX_END_TIMER_HANDLER \
+    }
+
+#define DX_DECLARE_TIMER_HANDLER(name) \
+    void name(EventLoopTimer *eventLoopTimer)
 
 typedef struct uv_timer_s EventLoopTimer;
 typedef struct timespec timespec;
