@@ -46,7 +46,7 @@ add_subdirectory(azure-iot-sdk-c out)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set(ROOT_NAMESPACE rpi_libs)
-set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_KEYWORD "RaspberryPi")
+set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_KEYWORD "DesktopDevX")
 
 target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/iothub_client/inc)
 target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/provisioning_client/inc)

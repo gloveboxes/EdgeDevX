@@ -2,7 +2,7 @@
 
 bool dx_timerStart(DX_TIMER_BINDING *timer)
 {
-    uint64_t timeout_ms, period_ms;
+    uint64_t timeout_ms = 0, period_ms = 0;
 
     if (!timer->initialized)
     {
@@ -18,7 +18,15 @@ bool dx_timerStart(DX_TIMER_BINDING *timer)
         }
         else
         {
-            timeout_ms = period_ms;
+            // A oneshot timer is initialised with a period_ms == 0
+            if (period_ms == 0)
+            {
+                timeout_ms = UINT64_MAX; // 584942417.355072044647387 years. Effectively disables
+            }
+            else
+            {
+                timeout_ms = period_ms;
+            }
         }
 
         uv_timer_start(&timer->timer_handle, timer->handler, timeout_ms, period_ms);
@@ -56,14 +64,18 @@ void dx_timerSetStop(DX_TIMER_BINDING *timerSet[], size_t timerCount)
     }
 }
 
-bool dx_timerStateSet(DX_TIMER_BINDING *timer, bool state){
-    if (state){
+bool dx_timerStateSet(DX_TIMER_BINDING *timer, bool state)
+{
+    if (state)
+    {
         return dx_timerStart(timer);
-    } else {
+    }
+    else
+    {
         dx_timerStop(timer);
         return true;
     }
-} 
+}
 
 void dx_timerEventLoopStop(void)
 {
