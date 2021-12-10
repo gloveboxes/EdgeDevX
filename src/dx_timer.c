@@ -10,26 +10,19 @@ bool dx_timerStart(DX_TIMER_BINDING *timer)
 
         period_ms = timer->period.tv_sec * 1000;
         period_ms = period_ms + timer->period.tv_nsec / 1000000;
+        timeout_ms = period_ms;
 
+        // Overide timeout if explicitly defined
         if (timer->timeout != NULL)
         {
             timeout_ms = timer->timeout->tv_sec * 1000;
             timeout_ms = timeout_ms + timer->timeout->tv_nsec / 1000000;
         }
-        else
-        {
-            // A oneshot timer is initialised with a period_ms == 0
-            if (period_ms == 0)
-            {
-                timeout_ms = UINT64_MAX; // 584942417.355072044647387 years. Effectively disables
-            }
-            else
-            {
-                timeout_ms = period_ms;
-            }
-        }
 
-        uv_timer_start(&timer->timer_handle, timer->handler, timeout_ms, period_ms);
+        if (period_ms != 0 || timeout_ms != 0)
+        {
+            uv_timer_start(&timer->timer_handle, timer->handler, timeout_ms, period_ms);
+        }
 
         timer->initialized = true;
     }
