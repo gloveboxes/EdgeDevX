@@ -36,7 +36,7 @@ int dx_getTerminationExitCode(void)
 }
 
 
-void dx_runEventLoop(void)
+void dx_eventLoopRun(void)
 {
     while (!terminationRequired)
     {
