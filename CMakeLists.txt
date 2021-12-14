@@ -61,7 +61,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/azure-mac
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_include_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/include)
     target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/lib)
-    target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/Cellar/openssl@3/3.0.0_1/lib/)
+    target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/Cellar/openssl@3/3.0.1/lib/)
 endif()
 
 target_link_libraries (${PROJECT_NAME} 
