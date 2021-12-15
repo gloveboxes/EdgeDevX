@@ -7,11 +7,11 @@
 #include "dx_gpio.h"
 #include "parson.h"
 
-#define DX_DEFINE_DIRECTMETHOD_HANDLER(name, json, directMethodBinding, responseMsg)                                         \
+#define DX_DIRECT_METHOD_HANDLER(name, json, directMethodBinding, responseMsg)                                         \
     DX_DIRECT_METHOD_RESPONSE_CODE name(JSON_Value *json, DX_DIRECT_METHOD_BINDING *directMethodBinding, char **responseMsg) \
     {
 
-#define DX_END_DIRECTMETHOD_HANDLER \
+#define DX_DIRECT_METHOD_END \
     }
 
 #define DX_DECLARE_DIRECTMETHOD_HANDLER(name) \
