@@ -2,26 +2,51 @@
 
 bool dx_timerStart(DX_TIMER_BINDING *timer)
 {
-    uint64_t timeout_ms = 0, period_ms = 0;
+    uint64_t period_ms = 0;
 
     if (!timer->initialized)
     {
-        uv_timer_init(uv_default_loop(), &timer->timer_handle);
+
+        if (timer->delay != NULL && timer->repeat != NULL)
+        {
+            printf("Can't specify both a timer delay and a repeat period\n");
+            dx_terminate(DX_ExitCode_Create_Timer_Failed);
+            return false;
+        }
 
         period_ms = timer->period.tv_sec * 1000;
         period_ms = period_ms + timer->period.tv_nsec / 1000000;
-        timeout_ms = period_ms;
 
-        // Overide timeout if explicitly defined
-        if (timer->timeout != NULL)
+        if (timer->delay != NULL && period_ms != 0)
         {
-            timeout_ms = timer->timeout->tv_sec * 1000;
-            timeout_ms = timeout_ms + timer->timeout->tv_nsec / 1000000;
+            printf("Can't specify both a timer delay and a period\n");
+            dx_terminate(DX_ExitCode_Create_Timer_Failed);
+            return false;
         }
 
-        if (period_ms != 0 || timeout_ms != 0)
+        uv_timer_init(uv_default_loop(), &timer->timer_handle);
+
+        if (timer->delay != NULL)
         {
-            uv_timer_start(&timer->timer_handle, timer->handler, timeout_ms, period_ms);
+            uint64_t timer_ms = timer->delay->tv_sec * 1000;
+            timer_ms = timer_ms + timer->delay->tv_nsec / 1000000;
+            uv_timer_start(&timer->timer_handle, timer->handler, timer_ms, 0);
+            timer->initialized = true;
+            return true;
+        }
+
+        if (timer->repeat != NULL)
+        {
+            uint64_t timer_ms = timer->repeat->tv_sec * 1000;
+            timer_ms = timer_ms + timer->repeat->tv_nsec / 1000000;
+            uv_timer_start(&timer->timer_handle, timer->handler, 0, timer_ms);
+            timer->initialized = true;
+            return true;
+        }
+
+        if (period_ms != 0)
+        {
+            uv_timer_start(&timer->timer_handle, timer->handler, 0, period_ms);
         }
 
         timer->initialized = true;

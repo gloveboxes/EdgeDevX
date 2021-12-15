@@ -18,6 +18,7 @@ static char *iotHubUri = NULL;
 static const char *_networkInterface = NULL;
 static DX_USER_CONFIG *_userConfig = NULL;
 static int outstandingMessageCount = 0;
+static bool connection_initialized = false;
 
 static char *_pnpModelIdJson = NULL;
 static const char *_pnpModelId = NULL;
@@ -125,6 +126,7 @@ static void dx_azureToDeviceStart(void)
     {
         dx_timerStart(&azureConnectionTimer);
         dx_timerOneShotSet(&azureConnectionTimer, &(struct timespec){1, 0});
+        connection_initialized = false;
     }
 }
 
@@ -177,6 +179,11 @@ bool createPnpModelIdJson(void)
 
 void dx_azureConnect(DX_USER_CONFIG *userConfig, const char *networkInterface, const char *plugAndPlayModelId)
 {
+    if (connection_initialized)
+    {
+        return;
+    }
+
     if (userConfig->connectionType == DX_CONNECTION_TYPE_NOT_DEFINED)
     {
         dx_Log_Debug("ERROR: Connection type not defined\n");
@@ -197,6 +204,8 @@ void dx_azureConnect(DX_USER_CONFIG *userConfig, const char *networkInterface, c
     }
 
     dx_azureToDeviceStart();
+
+    connection_initialized = true;
 }
 
 /// <summary>
@@ -669,117 +678,132 @@ static void RegisterProvisioningDeviceCallback(PROV_DEVICE_RESULT registerResult
 /// </summary>
 static bool SetUpAzureIoTHubClientWithDaaDpsPnP(void)
 {
-        const int deviceIdForDaaCertUsage = 1; // Use DAA cert in provisioning flow - requires the SetDeviceId option to be set on the
-                                               // provisioning client.
-        PROV_DEVICE_RESULT prov_result;
-        static bool security_init_called = false;
-        static int provisionCompletedMaxRetry = 0;
+    const int deviceIdForDaaCertUsage = 1; // Use DAA cert in provisioning flow - requires the SetDeviceId option to be set on the
+                                           // provisioning client.
+    PROV_DEVICE_RESULT prov_result;
+    static bool security_init_called = false;
+    static int provisionCompletedMaxRetry = 0;
 
-        if (!dx_isDeviceAuthReady() || !dx_isNetworkConnected(_networkInterface)) {
-            return false;
+    if (!dx_isDeviceAuthReady() || !dx_isNetworkConnected(_networkInterface))
+    {
+        return false;
+    }
+
+    switch (deviceConnectionState)
+    {
+    case DEVICE_NOT_CONNECTED:
+    case DEVICE_PROVISIONING_ERROR:
+
+        dpsRegisterStatus = PROV_DEVICE_RESULT_INVALID_STATE;
+        provisionCompletedMaxRetry = 0;
+
+        // Initiate security with X509 Certificate
+        if (prov_dev_security_init(SECURE_DEVICE_TYPE_X509) != 0)
+        {
+            dx_Log_Debug("ERROR: Failed to initiate X509 Certificate security\n");
+            deviceConnectionState = DEVICE_PROVISIONING_ERROR;
+            goto cleanup;
         }
 
-        switch (deviceConnectionState) {
-        case DEVICE_NOT_CONNECTED:
-        case DEVICE_PROVISIONING_ERROR:
+        security_init_called = true;
 
-            dpsRegisterStatus = PROV_DEVICE_RESULT_INVALID_STATE;
-            provisionCompletedMaxRetry = 0;
-
-            // Initiate security with X509 Certificate
-            if (prov_dev_security_init(SECURE_DEVICE_TYPE_X509) != 0) {
-                dx_Log_Debug("ERROR: Failed to initiate X509 Certificate security\n");
-                deviceConnectionState = DEVICE_PROVISIONING_ERROR;
-                goto cleanup;
-            }
-
-            security_init_called = true;
-
-            // Create Provisioning Client for communication with DPS using MQTT protocol
-            if ((prov_handle = Prov_Device_LL_Create(dpsUrl, _userConfig->idScope, Prov_Device_MQTT_Protocol)) == NULL) {
-                dx_Log_Debug("ERROR: Failed to create Provisioning Client\n");
-                deviceConnectionState = DEVICE_PROVISIONING_ERROR;
-                goto cleanup;
-            }
-
-            // Sets Device ID on Provisioning Client
-            if ((prov_result = Prov_Device_LL_SetOption(prov_handle, "SetDeviceId", &deviceIdForDaaCertUsage)) != PROV_DEVICE_RESULT_OK) {
-                dx_Log_Debug("ERROR: Failed to set Device ID in Provisioning Client, error=%d\n", prov_result);
-                deviceConnectionState = DEVICE_PROVISIONING_ERROR;
-                goto cleanup;
-            }
-
-            // Sets Model ID provisioning data
-            if (_pnpModelIdJson != NULL) {
-                if ((prov_result = Prov_Device_LL_Set_Provisioning_Payload(prov_handle, _pnpModelIdJson)) != PROV_DEVICE_RESULT_OK) {
-                    dx_Log_Debug("Error: Failed to set Model ID in Provisioning Client, error=%d\n", prov_result);
-                    deviceConnectionState = DEVICE_PROVISIONING_ERROR;
-                    goto cleanup;
-                }
-            }
-
-            // Sets the callback function for device registration
-            if ((prov_result = Prov_Device_LL_Register_Device(prov_handle, RegisterProvisioningDeviceCallback, NULL, NULL, NULL)) !=
-                PROV_DEVICE_RESULT_OK) {
-                dx_Log_Debug("ERROR: Failed to set callback function for device registration, error=%d\n", prov_result);
-                deviceConnectionState = DEVICE_PROVISIONING_ERROR;
-                goto cleanup;
-            }
-
-            deviceConnectionState = DEVICE_PROVISIONING;
-
-            break;
-
-        case DEVICE_PROVISIONING:
-
-            Prov_Device_LL_DoWork(prov_handle);
-            if (dpsRegisterStatus == PROV_DEVICE_RESULT_OK) {
-                deviceConnectionState = DEVICE_PROVISION_IOT_CLIENT;
-            }
-
-            // Retry cadence is once a second, wait max 60 seconds for call to
-            // RegisterProvisioningDeviceCallback() to complete else restart provisioning process
-            if (provisionCompletedMaxRetry++ > 60) {
-                deviceConnectionState = DEVICE_PROVISIONING_ERROR;
-                dx_Log_Debug("ERROR: Failed to register device with provisioning service: %d\n", dpsRegisterStatus);
-            }
-
-            break;
-
-        case DEVICE_PROVISION_IOT_CLIENT:
-
-            if (!ConnectToIotHub(iotHubUri)) {
-
-                if (iothubClientHandle != NULL) {
-                    IoTHubDeviceClient_LL_Destroy(iothubClientHandle);
-                    iothubClientHandle = NULL;
-                }
-
-                deviceConnectionState = DEVICE_PROVISIONING_ERROR;
-                goto cleanup;
-            }
-
-            deviceConnectionState = DEVICE_CONNECTED;
-
-            break;
-
-        default:
-            break;
+        // Create Provisioning Client for communication with DPS using MQTT protocol
+        if ((prov_handle = Prov_Device_LL_Create(dpsUrl, _userConfig->idScope, Prov_Device_MQTT_Protocol)) == NULL)
+        {
+            dx_Log_Debug("ERROR: Failed to create Provisioning Client\n");
+            deviceConnectionState = DEVICE_PROVISIONING_ERROR;
+            goto cleanup;
         }
 
-    cleanup:
-        if (deviceConnectionState == DEVICE_CONNECTED || deviceConnectionState == DEVICE_PROVISIONING_ERROR) {
+        // Sets Device ID on Provisioning Client
+        if ((prov_result = Prov_Device_LL_SetOption(prov_handle, "SetDeviceId", &deviceIdForDaaCertUsage)) != PROV_DEVICE_RESULT_OK)
+        {
+            dx_Log_Debug("ERROR: Failed to set Device ID in Provisioning Client, error=%d\n", prov_result);
+            deviceConnectionState = DEVICE_PROVISIONING_ERROR;
+            goto cleanup;
+        }
 
-            if (prov_handle != NULL) {
-                Prov_Device_LL_Destroy(prov_handle);
-                prov_handle = NULL;
-            }
-
-            if (security_init_called) {
-                prov_dev_security_deinit();
-                security_init_called = false;
+        // Sets Model ID provisioning data
+        if (_pnpModelIdJson != NULL)
+        {
+            if ((prov_result = Prov_Device_LL_Set_Provisioning_Payload(prov_handle, _pnpModelIdJson)) != PROV_DEVICE_RESULT_OK)
+            {
+                dx_Log_Debug("Error: Failed to set Model ID in Provisioning Client, error=%d\n", prov_result);
+                deviceConnectionState = DEVICE_PROVISIONING_ERROR;
+                goto cleanup;
             }
         }
+
+        // Sets the callback function for device registration
+        if ((prov_result = Prov_Device_LL_Register_Device(prov_handle, RegisterProvisioningDeviceCallback, NULL, NULL, NULL)) !=
+            PROV_DEVICE_RESULT_OK)
+        {
+            dx_Log_Debug("ERROR: Failed to set callback function for device registration, error=%d\n", prov_result);
+            deviceConnectionState = DEVICE_PROVISIONING_ERROR;
+            goto cleanup;
+        }
+
+        deviceConnectionState = DEVICE_PROVISIONING;
+
+        break;
+
+    case DEVICE_PROVISIONING:
+
+        Prov_Device_LL_DoWork(prov_handle);
+        if (dpsRegisterStatus == PROV_DEVICE_RESULT_OK)
+        {
+            deviceConnectionState = DEVICE_PROVISION_IOT_CLIENT;
+        }
+
+        // Retry cadence is once a second, wait max 60 seconds for call to
+        // RegisterProvisioningDeviceCallback() to complete else restart provisioning process
+        if (provisionCompletedMaxRetry++ > 60)
+        {
+            deviceConnectionState = DEVICE_PROVISIONING_ERROR;
+            dx_Log_Debug("ERROR: Failed to register device with provisioning service: %d\n", dpsRegisterStatus);
+        }
+
+        break;
+
+    case DEVICE_PROVISION_IOT_CLIENT:
+
+        if (!ConnectToIotHub(iotHubUri))
+        {
+
+            if (iothubClientHandle != NULL)
+            {
+                IoTHubDeviceClient_LL_Destroy(iothubClientHandle);
+                iothubClientHandle = NULL;
+            }
+
+            deviceConnectionState = DEVICE_PROVISIONING_ERROR;
+            goto cleanup;
+        }
+
+        deviceConnectionState = DEVICE_CONNECTED;
+
+        break;
+
+    default:
+        break;
+    }
+
+cleanup:
+    if (deviceConnectionState == DEVICE_CONNECTED || deviceConnectionState == DEVICE_PROVISIONING_ERROR)
+    {
+
+        if (prov_handle != NULL)
+        {
+            Prov_Device_LL_Destroy(prov_handle);
+            prov_handle = NULL;
+        }
+
+        if (security_init_called)
+        {
+            prov_dev_security_deinit();
+            security_init_called = false;
+        }
+    }
 
     return deviceConnectionState == DEVICE_CONNECTED;
 }

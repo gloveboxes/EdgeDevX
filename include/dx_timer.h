@@ -26,11 +26,11 @@
 typedef struct uv_timer_s EventLoopTimer;
 typedef struct timespec timespec;
 
-typedef struct
-{
+typedef struct {
     void (*handler)(uv_timer_t *handle);
     struct timespec period;
-    struct timespec *timeout;
+    struct timespec *delay;
+    struct timespec *repeat;
     const char *name;
     bool initialized;
     uv_timer_t timer_handle;
