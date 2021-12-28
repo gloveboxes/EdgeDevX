@@ -59,9 +59,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/azure-mac
 # brew install openssl
 # brew install ossp-uuid
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    target_include_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/include)
-    target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/lib)
-    target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/Cellar/openssl@3/3.0.1/lib/)
+    # macOS on Apple silicon (arm64)
+    if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm64")
+        target_include_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/include)
+        target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/lib)
+        target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/Cellar/openssl@3/3.0.1/lib/)
+    else()
+    # macOS on Intel
+    endif()
 endif()
 
 target_link_libraries (${PROJECT_NAME} 
