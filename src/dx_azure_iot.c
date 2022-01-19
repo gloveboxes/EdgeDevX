@@ -142,7 +142,7 @@ bool createPnpModelIdJson(void)
 {
     if (!dx_isStringNullOrEmpty(_pnpModelId))
     {
-        // allow for JSON format "{\"modelId\":\"%s\"}", 14 char, plus terminiating NULL
+        // allow for JSON format "{\"modelId\":\"%s\"}", 14 char, plus terminating NULL
         size_t modelIdLen = 15;
 
         // add length of the PnP Module to the model id length
@@ -488,39 +488,7 @@ static bool SetUpAzureIoTHubClientWithConnectionString(void)
 {
     int retError = 0;
     IOTHUB_CLIENT_RESULT iothubResult;
-    IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol = MQTT_Protocol;
-
-    const size_t connection_string_length = 512;
-
-    static char *connection_string = NULL;
-
-    if (connection_string == NULL)
-    {
-        connection_string = (char *)malloc(connection_string_length);
-        if (connection_string == NULL)
-        {
-            printf("connection string malloc failed\n");
-            return false;
-        }
-    }
-
-    int position = 0;
-
-    memset(connection_string, 0x00, connection_string_length);
-
-    strncpy(connection_string, _userConfig->hostname, connection_string_length);
-    position = strlen(_userConfig->hostname);
-
-    strncpy(connection_string + position, ";", connection_string_length - position);
-    position++;
-
-    strncpy(connection_string + position, _userConfig->device_id, connection_string_length - position);
-    position += strlen(_userConfig->device_id);
-
-    strcpy(connection_string + position, ";");
-    position++;
-
-    strncpy(connection_string + position, _userConfig->shared_access_key, connection_string_length - position);
+    IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol = MQTT_Protocol;    
 
     // Used to initialize IoTHub SDK subsystem
     (void)IoTHub_Init();
@@ -528,12 +496,12 @@ static bool SetUpAzureIoTHubClientWithConnectionString(void)
     deviceConnectionState = DEVICE_NOT_CONNECTED;
 
     // If network/DAA are not ready, fail out (which will trigger a retry)
-    if (!dx_isNetworkConnected(_networkInterface) || dx_isStringNullOrEmpty(connection_string))
+    if (!dx_isNetworkConnected(_networkInterface) || dx_isStringNullOrEmpty(_userConfig->connection_string))
     {
         return false;
     }
 
-    if ((iothubClientHandle = IoTHubDeviceClient_LL_CreateFromConnectionString((const char *)connection_string, &MQTT_Protocol)) == NULL)
+    if ((iothubClientHandle = IoTHubDeviceClient_LL_CreateFromConnectionString(_userConfig->connection_string, &MQTT_Protocol)) == NULL)
     {
         dx_Log_Debug("ERROR: Failed to create client IoT Hub Client Handle. Hint: Check your connection string\n");
         return false;
@@ -563,7 +531,7 @@ static bool ConnectToIotHub(const char *hostname)
         return false;
     }
 
-    //TODO deviceid is hacked so code compiles
+    //TODO deviceId is hacked so code compiles
     if ((iothubClientHandle = IoTHubDeviceClient_LL_CreateFromDeviceAuth(hostname, "deviceid", &MQTT_Protocol)) == NULL)
     {
         dx_Log_Debug("ERROR: Failed to create client IoT Hub Client Handle\n");

@@ -22,8 +22,7 @@ typedef enum {
 typedef struct {
     const char* idScope;
     const char* hostname;
-    const char* device_id;
-    const char* shared_access_key;
+    const char* connection_string;
     ConnectionType connectionType;
 } DX_USER_CONFIG;
 
