@@ -6,7 +6,8 @@
 // Usage text for command line arguments in application manifest.
 static const char *cmdLineArgsUsageText =
     "DPS connection type: \" CmdArgs \": [ \"--ScopeID\", \"<scope_id>\"]\n"
-    "Hostname connection type: \" CmdArgs \": [\"--Hostname\", \"<azureiothub_hostname>\"]\n";
+    "Hostname connection type: \" CmdArgs \": [\"--Hostname\", \"<azureiothub_hostname>\"]\n"
+    "Connection string type: \" CmdArgs \": [\"--ConnectionString\", \"<iot_hub_central_connection_string>\"]\n";
 
 /// <summary>
 ///     Parse the command line arguments given in the application manifest.
