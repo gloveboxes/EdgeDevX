@@ -17,7 +17,9 @@ bool dx_configParseCmdLineArguments(int argc, char *argv[], DX_USER_CONFIG *user
     bool result = true;
     int option = 0;
     static const struct option cmdLineOptions[] = {
-        {.name = "ScopeID", .has_arg = required_argument, .flag = NULL, .val = 's'},
+        {.name = "ScopeId", .has_arg = required_argument, .flag = NULL, .val = 's'},
+        {.name = "DeviceId", .has_arg = required_argument, .flag = NULL, .val = 'd'},
+        {.name = "DeviceKey", .has_arg = required_argument, .flag = NULL, .val = 'k'},
         {.name = "ConnectionString", .has_arg = required_argument, .flag = NULL, .val = 'c'},
         {.name = "Hostname", .has_arg = required_argument, .flag = NULL, .val = 'h'},
     };
@@ -25,7 +27,7 @@ bool dx_configParseCmdLineArguments(int argc, char *argv[], DX_USER_CONFIG *user
     userConfig->connectionType = DX_CONNECTION_TYPE_NOT_DEFINED;
 
     // Loop over all of the options.
-    while ((option = getopt_long(argc, argv, "s:c:h:", cmdLineOptions, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "s:c:h:k:d:", cmdLineOptions, NULL)) != -1) {
         // Check if arguments are missing. Every option requires an argument.
         if (optarg != NULL && optarg[0] == '-') {
             printf("WARNING: Option %c requires an argument\n", option);
@@ -37,9 +39,14 @@ bool dx_configParseCmdLineArguments(int argc, char *argv[], DX_USER_CONFIG *user
             userConfig->connectionType = DX_CONNECTION_TYPE_STRING;
             break;
         case 's':
-            // printf("ScopeId: %s\n", optarg);
             userConfig->idScope = optarg;
             userConfig->connectionType = DX_CONNECTION_TYPE_DPS;
+            break;
+        case 'k':
+            userConfig->device_key = optarg;
+            break;
+        case 'd':
+            userConfig->device_id = optarg;
             break;
         case 'h':
             // printf("Hostname String: %s\n", optarg);

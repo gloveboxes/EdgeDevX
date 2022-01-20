@@ -21,6 +21,8 @@ typedef enum {
 
 typedef struct {
     const char* idScope;
+    const char* device_id;
+    const char* device_key;
     const char* hostname;
     const char* connection_string;
     ConnectionType connectionType;
