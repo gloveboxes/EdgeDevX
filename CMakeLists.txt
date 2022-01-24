@@ -54,10 +54,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/c-utility/inc)
 target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/umock-c/inc)
 target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/azure-macro-utils-c/inc)
 
+#
 # The following config was required for macOS homebrew installed UV, UUID and SSL libs
-# brew install --HEAD libuv
-# brew install openssl
-# brew install ossp-uuid
+# Install brew
+# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#
+# Install required libraries
+# brew install mosquitto libuv openssl ossp-uuid
+#
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     # macOS on Apple silicon (arm64)
     if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm64")
@@ -66,12 +70,16 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/Cellar/openssl@3/3.0.1/lib/)
     else()
     # macOS on Intel
+        target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
+        target_link_directories(${PROJECT_NAME} PUBLIC /usr/local/lib)
+        target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/opt/openssl@3/include)
+        target_link_directories(${PROJECT_NAME} PUBLIC /usr/local/opt/openssl@3/lib)
     endif()
 endif()
 
-target_link_libraries (${PROJECT_NAME} 
-    uv 
-    pthread 
+target_link_libraries (${PROJECT_NAME}
+    uv
+    pthread
     iothub_client
     umqtt
     prov_auth_client
