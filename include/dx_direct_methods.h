@@ -4,7 +4,6 @@
 #pragma once
 
 #include "dx_azure_iot.h"
-#include "dx_gpio.h"
 #include "parson.h"
 
 #define DX_DIRECT_METHOD_HANDLER(name, json, directMethodBinding, responseMsg)                                         \
