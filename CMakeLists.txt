@@ -59,6 +59,16 @@ set(use_prov_client ON CACHE  BOOL "Use prov client" FORCE )
 # Add Azure IoT SDK C
 add_subdirectory(azure-iot-sdk-c out)
 
+
+# Enable or disable RemoteX Peripheral support
+if (ENABLE_DESKTOP_DEVX_REMOTEX)
+    # ################################################################################
+    # # The following line required for the AzureSphereRemoteX.Client library
+    add_subdirectory("AzureSphereRemoteX" applibs)
+    target_link_libraries(${PROJECT_NAME} applibs)
+    # ################################################################################
+endif(ENABLE_DESKTOP_DEVX_REMOTEX)
+
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set(ROOT_NAMESPACE rpi_libs)
