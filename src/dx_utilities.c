@@ -136,7 +136,7 @@ bool dx_startThreadDetached(void *(daemon)(void *), void *arg, char *daemon_name
     return true;
 }
 
-void dx_Log_Debug_Init(const char *buffer, size_t buffer_size)
+void dx_Log_Debug_Init(char *buffer, size_t buffer_size)
 {
     _log_debug_buffer = (char *)buffer;
     _log_debug_buffer_size = buffer_size;

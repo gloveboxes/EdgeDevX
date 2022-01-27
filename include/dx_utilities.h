@@ -34,4 +34,4 @@ char *dx_getCurrentUtc(char *buffer, size_t bufferSize);
 int dx_stringEndsWith(const char *str, const char *suffix);
 int64_t dx_getNowMilliseconds(void);
 void dx_Log_Debug(char *fmt, ...);
-void dx_Log_Debug_Init(const char *buffer, size_t buffer_size);
+void dx_Log_Debug_Init(char *buffer, size_t buffer_size);
