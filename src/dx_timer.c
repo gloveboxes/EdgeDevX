@@ -1,12 +1,25 @@
 #include "dx_timer.h"
 
+bool dx_timerChange(DX_TIMER_BINDING *timer, const struct timespec *repeat)
+{
+    if (!timer->initialized)
+    {
+        return false;
+    }
+
+    uint64_t timer_ms = repeat->tv_sec * 1000;
+    timer_ms = timer_ms + repeat->tv_nsec / 1000000;
+    uv_timer_set_repeat(&timer->timer_handle, timer_ms);
+
+    return true;
+}
+
 bool dx_timerStart(DX_TIMER_BINDING *timer)
 {
     uint64_t period_ms = 0;
 
     if (!timer->initialized)
     {
-
         if (timer->delay != NULL && timer->repeat != NULL)
         {
             printf("Can't specify both a timer delay and a repeat period\n");
