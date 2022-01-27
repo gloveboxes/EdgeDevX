@@ -14,7 +14,7 @@
 #define DX_DEVICE_TWIN_HANDLER_END \
 	}
 
-#define DX_DECLARE_DEVICETWIN_HANDLER(name) \
+#define DX_DECLARE_DEVICE_TWIN_HANDLER(name) \
 	void name(DX_DEVICE_TWIN_BINDING *deviceTwinBinding);
 
 typedef enum
