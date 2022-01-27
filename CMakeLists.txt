@@ -42,11 +42,11 @@ add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
 # Enable or disable RemoteX Peripheral support
 if (ENABLE_DESKTOP_DEVX_REMOTEX)
-    message(STATUS "RemoteX Peripherls Enabled")
+    message(STATUS "RemoteX Peripherals Enabled")
     # Following line required for Azure Sphere RemoteX Client library
     target_include_directories(${PROJECT_NAME} PUBLIC ../AzureSphereRemoteX )
 else (ENABLE_DESKTOP_DEVX_REMOTEX)
-    message(STATUS "RemoteX Peripherls Disabled")
+    message(STATUS "RemoteX Peripherals Disabled")
 endif(ENABLE_DESKTOP_DEVX_REMOTEX)
 
 # Set options for Azure IoT SDK C lib
