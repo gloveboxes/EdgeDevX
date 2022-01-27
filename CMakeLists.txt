@@ -43,8 +43,8 @@ add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 # Enable or disable RemoteX Peripheral support
 if (ENABLE_DESKTOP_DEVX_REMOTEX)
     message(STATUS "RemoteX Peripherls Enabled")
-    # Following line required for Azure Sphere RemoteX.Client library
-    target_include_directories(${PROJECT_NAME} PUBLIC ../AzureSphereRemoteX.Client )
+    # Following line required for Azure Sphere RemoteX Client library
+    target_include_directories(${PROJECT_NAME} PUBLIC ../AzureSphereRemoteX )
 else (ENABLE_DESKTOP_DEVX_REMOTEX)
     message(STATUS "RemoteX Peripherls Disabled")
 endif(ENABLE_DESKTOP_DEVX_REMOTEX)
