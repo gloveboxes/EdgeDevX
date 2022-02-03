@@ -106,7 +106,14 @@ void dx_azureUnregisterConnectionChangedNotification(void (*connectionStatusCall
 
 static void dx_azureToDeviceStart(void)
 {
+    int iothubInitResult;
+
     if (!azureConnectionTimer.initialized) {
+        if ((iothubInitResult = IoTHub_Init()) != 0) {
+            dx_Log_Debug("Failure to initialize IoT hub client, error=%d\n", iothubInitResult);
+            dx_terminate(DX_ExitCode_Init_IoT_Failed);
+            return;
+        }
         dx_timerStart(&azureConnectionTimer);
         dx_timerOneShotSet(&azureConnectionTimer, &(struct timespec){1, 0});
         connection_initialized = false;
@@ -117,6 +124,7 @@ void dx_azureToDeviceStop(void)
 {
     if (azureConnectionTimer.initialized) {
         dx_timerStop(&azureConnectionTimer);
+        IoTHub_Deinit();
     }
 }
 
@@ -424,9 +432,6 @@ static bool SetUpAzureIoTHubClientWithConnectionString(void)
     IOTHUB_CLIENT_RESULT iothubResult;
     IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol = MQTT_Protocol;
 
-    // Used to initialize IoTHub SDK subsystem
-    (void)IoTHub_Init();
-
     deviceConnectionState = DEVICE_NOT_CONNECTED;
 
     // If network/DAA are not ready, fail out (which will trigger a retry)
@@ -578,12 +583,6 @@ static bool SetUpAzureIoTHubClientWithDpsPnP(void)
 
         dpsRegisterStatus = PROV_DEVICE_RESULT_INVALID_STATE;
         provisionCompletedMaxRetry = 0;
-
-        // Before invoking ANY IoT Hub or DPS functionality, IoTHub_Init must be invoked.
-        if ((iothubInitResult = IoTHub_Init()) != 0) {
-            dx_Log_Debug("Failure to initialize client, error=%d", iothubInitResult);
-            goto cleanup;
-        }
 
         // Initiate security with X509 Certificate
         if (prov_dev_security_init(SECURE_DEVICE_TYPE_SYMMETRIC_KEY) != 0) {
