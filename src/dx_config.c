@@ -60,24 +60,20 @@ bool dx_configParseCmdLineArguments(int argc, char *argv[], DX_USER_CONFIG *user
 
     switch (userConfig->connectionType) {
     case DX_CONNECTION_TYPE_NOT_DEFINED:
-        dx_terminate(DX_ExitCode_Validate_Connection_Type_Not_Defined);
         result = false;
         break;
     case DX_CONNECTION_TYPE_DPS:
         if (dx_isStringNullOrEmpty(userConfig->idScope)) {
-            dx_terminate(DX_ExitCode_Validate_ScopeId_Not_Defined);
             result = false;
         }
         break;
     case DX_CONNECTION_TYPE_STRING:
         if (dx_isStringNullOrEmpty(userConfig->connection_string)) {
-            dx_terminate(DX_ExitCode_Validate_Hostname_Not_Defined);
             result = false;
         }
         break;
     case DX_CONNECTION_TYPE_HOSTNAME:
         if (dx_isStringNullOrEmpty(userConfig->hostname)) {
-            dx_terminate(DX_ExitCode_Validate_Hostname_Not_Defined);
             result = false;
         }
         break;
