@@ -3,7 +3,7 @@
 #define MAX_CONNECTION_STATUS_CALLBACKS 5
 
 static bool SetUpAzureIoTHubClientWithConnectionString(void);
-static bool SetUpAzureIoTHubClientWithDaa(void);
+// static bool SetUpAzureIoTHubClientWithDaa(void);
 static bool SetUpAzureIoTHubClientWithDpsPnP(void);
 static bool SetupAzureClient(void);
 static const char *GetMessageResultReasonString(IOTHUB_MESSAGE_RESULT reason);
@@ -391,9 +391,9 @@ static bool SetupAzureClient()
 
     switch (_userConfig->connectionType) {
     case DX_CONNECTION_TYPE_HOSTNAME:
-        if (!SetUpAzureIoTHubClientWithDaa()) {
-            return false;
-        }
+        // if (!SetUpAzureIoTHubClientWithDaa()) {
+        //     return false;
+        // }
         break;
     case DX_CONNECTION_TYPE_DPS:
         if (!SetUpAzureIoTHubClientWithDpsPnP()) {
@@ -453,7 +453,7 @@ static bool SetUpAzureIoTHubClientWithConnectionString(void)
 }
 
 /// <summary>
-/// Called by both DPS and Direct X509 functions to set up the connection.
+/// Sets up connection to IoT Hub/Central.
 /// </summary>
 /// <param name="hostname"></param>
 /// <returns></returns>
@@ -500,40 +500,40 @@ static bool ConnectToIotHub(const char *hostname)
 ///     Sets up the Azure IoT Hub connection (creates the iothubClientHandle)
 ///     with DAA
 /// </summary>
-static bool SetUpAzureIoTHubClientWithDaa(void)
-{
-    int retError = 0;
+// static bool SetUpAzureIoTHubClientWithDaa(void)
+// {
+//     int retError = 0;
 
-    deviceConnectionState = DEVICE_NOT_CONNECTED;
+//     deviceConnectionState = DEVICE_NOT_CONNECTED;
 
-    // If network/DAA are not ready, fail out (which will trigger a retry)
-    if (!dx_isDeviceAuthReady() || !dx_isNetworkConnected(_networkInterface)) {
-        return false;
-    }
+//     // If network/DAA are not ready, fail out (which will trigger a retry)
+//     if (!dx_isDeviceAuthReady() || !dx_isNetworkConnected(_networkInterface)) {
+//         return false;
+//     }
 
-    // Set up auth type
-    if ((retError = iothub_security_init(IOTHUB_SECURITY_TYPE_X509)) != 0) {
-        dx_Log_Debug("ERROR: iothub_security_init failed with error %d.\n", retError);
-        return false;
-    }
+//     // Set up auth type
+//     if ((retError = iothub_security_init(IOTHUB_SECURITY_TYPE_X509)) != 0) {
+//         dx_Log_Debug("ERROR: iothub_security_init failed with error %d.\n", retError);
+//         return false;
+//     }
 
-    if (!ConnectToIotHub(_userConfig->hostname)) {
+//     if (!ConnectToIotHub(_userConfig->hostname)) {
 
-        if (iothubClientHandle != NULL) {
-            IoTHubDeviceClient_LL_Destroy(iothubClientHandle);
-            iothubClientHandle = NULL;
-        }
+//         if (iothubClientHandle != NULL) {
+//             IoTHubDeviceClient_LL_Destroy(iothubClientHandle);
+//             iothubClientHandle = NULL;
+//         }
 
-        goto cleanup;
-    }
+//         goto cleanup;
+//     }
 
-    deviceConnectionState = DEVICE_CONNECTED;
+//     deviceConnectionState = DEVICE_CONNECTED;
 
-cleanup:
-    iothub_security_deinit();
+// cleanup:
+//     iothub_security_deinit();
 
-    return deviceConnectionState == DEVICE_CONNECTED;
-}
+//     return deviceConnectionState == DEVICE_CONNECTED;
+// }
 
 /// <summary>
 ///     DPS provisioning callback with status
@@ -584,9 +584,9 @@ static bool SetUpAzureIoTHubClientWithDpsPnP(void)
         dpsRegisterStatus = PROV_DEVICE_RESULT_INVALID_STATE;
         provisionCompletedMaxRetry = 0;
 
-        // Initiate security with X509 Certificate
+        // Initiate security with SAS Certificate
         if (prov_dev_security_init(SECURE_DEVICE_TYPE_SYMMETRIC_KEY) != 0) {
-            dx_Log_Debug("ERROR: Failed to initiate X509 Certificate security\n");
+            dx_Log_Debug("ERROR: Failed to initiate SAS security\n");
             deviceConnectionState = DEVICE_PROVISIONING_ERROR;
             goto cleanup;
         }
