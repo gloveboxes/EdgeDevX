@@ -72,7 +72,7 @@ endif(ENABLE_EDGE_DEVX_REMOTEX)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set(ROOT_NAMESPACE rpi_libs)
-set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_KEYWORD "DesktopDevX")
+set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_KEYWORD "EdgeDevX")
 
 target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/iothub_client/inc)
 target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/provisioning_client/inc)

@@ -6,4 +6,4 @@ This library is API compatible with [Azure Sphere DevX](https://github.com/Azure
 
 With a bit of care you can build apps that target Azure Sphere, and other POSIX compatible platforms, including Linux, Raspberry Pi OS, and macOS.
 
-Review the [DesktopDevX Library Wiki](https://github.com/Azure-Sphere-DevX/DesktopDevX/wiki) for more information.
+Review the [EdgeDevX Library Wiki](https://github.com/Azure-Sphere-DevX/EdgeDevX.Examples/wiki) for more information.
