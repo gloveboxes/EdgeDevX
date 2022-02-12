@@ -21,12 +21,13 @@ bool dx_configParseCmdLineArguments(int argc, char *argv[], DX_USER_CONFIG *user
         {.name = "DeviceKey", .has_arg = required_argument, .flag = NULL, .val = 'k'},
         {.name = "ConnectionString", .has_arg = required_argument, .flag = NULL, .val = 'c'},
         {.name = "Hostname", .has_arg = required_argument, .flag = NULL, .val = 'h'},
+        {.name = "NetworkInterface", .has_arg = required_argument, .flag = NULL, .val = 'n'},
     };
 
     userConfig->connectionType = DX_CONNECTION_TYPE_NOT_DEFINED;
 
     // Loop over all of the options.
-    while ((option = getopt_long(argc, argv, "s:c:h:k:d:", cmdLineOptions, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "s:c:h:k:d:n:", cmdLineOptions, NULL)) != -1) {
         // Check if arguments are missing. Every option requires an argument.
         if (optarg != NULL && optarg[0] == '-') {
             printf("WARNING: Option %c requires an argument\n", option);
@@ -46,6 +47,9 @@ bool dx_configParseCmdLineArguments(int argc, char *argv[], DX_USER_CONFIG *user
             break;
         case 'd':
             userConfig->device_id = optarg;
+            break;
+        case 'n':
+            userConfig->network_interface = optarg;
             break;
         case 'h':
             // printf("Hostname String: %s\n", optarg);

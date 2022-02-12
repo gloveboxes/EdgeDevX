@@ -25,6 +25,7 @@ typedef struct {
     const char* device_key;
     const char* hostname;
     const char* connection_string;
+    const char* network_interface;
     ConnectionType connectionType;
 } DX_USER_CONFIG;
 

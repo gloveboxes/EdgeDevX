@@ -1,14 +1,18 @@
 #pragma once
 
-#include <stdbool.h>
-#include <pthread.h>
-#include <errno.h>
-#include <time.h>
+#include "dx_timer.h"
 #include <ctype.h>
-#include <string.h>
+#include <errno.h>
+#include <ifaddrs.h>
+#include <pthread.h>
 #include <stdarg.h>
-#include <stdio.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <time.h>
 
 #define ONE_MS 1000000
 #define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
@@ -17,7 +21,7 @@
 
 bool dx_isDeviceAuthReady(void);
 bool dx_isNetworkConnected(const char *networkInterface);
-bool dx_isNetworkReady(void);
+bool dx_isNetworkReady(const char *networkInterface);
 bool dx_isStringNullOrEmpty(const char *string);
 
 /// <summary>

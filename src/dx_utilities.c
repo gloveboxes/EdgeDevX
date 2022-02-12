@@ -2,6 +2,16 @@
 
 static char *_log_debug_buffer = NULL;
 static size_t _log_debug_buffer_size;
+static bool network_timer_initialised = false;
+static bool network_ready_cached = false;
+static DX_DECLARE_TIMER_HANDLER(network_ready_expired_handler);
+static DX_TIMER_BINDING tmr_network_ready_cached = {.name = "tmr_network_ready_cached", .handler = network_ready_expired_handler};
+
+enum {
+    IFACE_IPv4 = (1<<0),
+    IFACE_IPv6 = (1<<1),
+    IFACE_IP   = (1<<0) | (1<<1),
+};
 
 bool dx_isStringNullOrEmpty(const char *string)
 {
@@ -24,28 +34,65 @@ bool dx_isStringPrintable(char *data)
     return 0x00 == *data;
 }
 
-bool dx_isNetworkReady(void)
+bool dx_isNetworkReady(const char *networkInterface)
 {
-    bool isNetworkReady = false;
-    // if (Networking_IsNetworkingReady(&isNetworkReady) != 0) {
-    //     printf("ERROR: Networking_IsNetworkingReady: %d (%s)\n", errno, strerror(errno));
-    // }
+    struct ifaddrs *curr, *list = NULL;
+    int             result = 0;
 
-    // return isNetworkReady;
+    if (!networkInterface || !(*networkInterface)) {
+        errno = EINVAL;
+        return 0;
+    }
 
-    return true;
+    if (getifaddrs(&list) == -1)
+        return 0;
+
+    for (curr = list; curr != NULL; curr = curr->ifa_next) {
+        if (!strcmp(networkInterface, curr->ifa_name)) {
+            if (curr->ifa_addr->sa_family == AF_INET)
+                result |= IFACE_IPv4;
+            if (curr->ifa_addr->sa_family == AF_INET6)
+                result |= IFACE_IPv6;
+        }
+    }
+
+    freeifaddrs(list);
+
+    errno = 0;
+    return result;
 }
+
+DX_TIMER_HANDLER(network_ready_expired_handler){
+    network_ready_cached = false;
+}
+DX_TIMER_HANDLER_END
 
 bool dx_isNetworkConnected(const char *networkInterface)
 {
-    // static int64_t lastNetworkStatusCheck = 0;
-    // static bool previousNetworkStatus = false;
-    // Networking_InterfaceConnectionStatus status;
+    bool result = false;
 
-    // // if the network is not ready don't bother with checking network status
+    if (network_ready_cached){
+        return true;
+    }
+
+    if (!network_timer_initialised){
+        dx_timerStart(&tmr_network_ready_cached);
+    }
+
+    if ((result = dx_isNetworkReady(networkInterface))){
+        network_ready_cached = true;
+        dx_timerOneShotSet(&tmr_network_ready_cached, &(struct timespec){15, 0});
+    }
+
+    dx_Log_Debug("Network ready:%d\n", result);
+
+    return result;
+
+    // if the network is not ready don't bother with checking network status
     // if (!dx_isNetworkReady()) {
-    //     previousNetworkStatus = false;
     //     return false;
+    // } else {
+    //     return true;
     // }
 
     // int64_t now = dx_getNowMilliseconds();
