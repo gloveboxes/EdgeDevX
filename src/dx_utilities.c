@@ -156,17 +156,14 @@ bool dx_isNetworkConnected(const char *networkInterface)
 
     if (!network_timer_initialised) {
         network_timer_initialised = true;
-        dx_Log_Debug("Timers initialized\n");
         dx_timerStart(&tmr_network_ready_cached);
         dx_timerStart(&tmr_network_connected_cached);
     }
 
     if ((result = dx_isNetworkReady(networkInterface))) {
         network_ready_cached = true;
-        dx_timerOneShotSet(&tmr_network_ready_cached, &(struct timespec){15, 0});
+        dx_timerOneShotSet(&tmr_network_ready_cached, &(struct timespec){20, 0});
     }
-
-    dx_Log_Debug("Network ready:%d\n", result);
 
     if (!result) {
         return false;
@@ -179,16 +176,14 @@ bool dx_isNetworkConnected(const char *networkInterface)
     network_connected_result = dx_getHttpData(end_to_end_test_url);
 
     if (network_connected_result == NULL) {
-        dx_Log_Debug("Network NOT connected\n");
         return false;
     } else {
-        dx_Log_Debug("Network connected\n");
-
         free(network_connected_result);
         network_connected_result = NULL;
 
         network_connected_cached = true;
-        dx_timerOneShotSet(&tmr_network_connected_cached, &(struct timespec){ 120, 0});
+        // 3 minute cache on end to end testing
+        dx_timerOneShotSet(&tmr_network_connected_cached, &(struct timespec){ 3 * 60, 0});
     }
 
     return true;
