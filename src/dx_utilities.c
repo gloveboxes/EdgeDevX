@@ -4,20 +4,31 @@ static char *_log_debug_buffer = NULL;
 static size_t _log_debug_buffer_size;
 static bool network_timer_initialised = false;
 static bool network_ready_cached = false;
+static bool network_connected_cached = false;
+
+static const char end_to_end_test_url[] = "http://www.msftconnecttest.com";
+
 static DX_DECLARE_TIMER_HANDLER(network_ready_expired_handler);
+static DX_DECLARE_TIMER_HANDLER(network_connected_expired_handler);
 static DX_TIMER_BINDING tmr_network_ready_cached = {.name = "tmr_network_ready_cached", .handler = network_ready_expired_handler};
+static DX_TIMER_BINDING tmr_network_connected_cached = {.name = "tmr_network_connected_cached", .handler = network_connected_expired_handler};
+
+// Curl stuff.
+struct url_data {
+    size_t size;
+    char *data;
+};
 
 enum {
-    IFACE_IPv4 = (1<<0),
-    IFACE_IPv6 = (1<<1),
-    IFACE_IP   = (1<<0) | (1<<1),
+    IFACE_IPv4 = (1 << 0),
+    IFACE_IPv6 = (1 << 1),
+    IFACE_IP = (1 << 0) | (1 << 1),
 };
 
 bool dx_isStringNullOrEmpty(const char *string)
 {
     return string == NULL || strlen(string) == 0;
 }
-
 
 /// <summary>
 /// check string contain only printable characters
@@ -34,10 +45,70 @@ bool dx_isStringPrintable(char *data)
     return 0x00 == *data;
 }
 
+static size_t write_data(void *ptr, size_t size, size_t nmemb, struct url_data *data)
+{
+    size_t index = data->size;
+    size_t n = (size * nmemb);
+    char *tmp;
+
+    data->size += (size * nmemb);
+
+    tmp = (char *)realloc(data->data, data->size + 1); /* +1 for '\0' */
+
+    if (tmp) {
+        data->data = tmp;
+    } else {
+        if (data->data) {
+            free(data->data);
+        }
+        return 0;
+    }
+
+    memcpy((data->data + index), ptr, n);
+    data->data[data->size] = '\0';
+
+    return size * nmemb;
+}
+
+char *dx_getHttpData(const char *url)
+{
+    struct url_data data;
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+
+    data.size = 0;
+    data.data = malloc(1);
+
+    CURLcode res = CURLE_OK;
+
+    CURL *curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    /* use a GET to fetch data */
+    curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+
+    // based on the libcurl sample - https://curl.se/libcurl/c/https.html
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+
+    /* Perform the request */
+    res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    if (res == CURLE_OK) {
+        // caller is responsible for freeing this.
+        return data.data;
+    } else {
+        free(data.data);
+    }
+
+    return NULL;
+}
+
 bool dx_isNetworkReady(const char *networkInterface)
 {
     struct ifaddrs *curr, *list = NULL;
-    int             result = 0;
+    int result = 0;
 
     if (!networkInterface || !(*networkInterface)) {
         errno = EINVAL;
@@ -62,64 +133,64 @@ bool dx_isNetworkReady(const char *networkInterface)
     return result;
 }
 
-DX_TIMER_HANDLER(network_ready_expired_handler){
+DX_TIMER_HANDLER(network_ready_expired_handler)
+{
     network_ready_cached = false;
+}
+DX_TIMER_HANDLER_END
+
+DX_TIMER_HANDLER(network_connected_expired_handler)
+{
+    network_connected_cached = false;
 }
 DX_TIMER_HANDLER_END
 
 bool dx_isNetworkConnected(const char *networkInterface)
 {
     bool result = false;
+    char *network_connected_result = NULL;
 
-    if (network_ready_cached){
+    if (network_ready_cached) {
         return true;
     }
 
-    if (!network_timer_initialised){
+    if (!network_timer_initialised) {
+        network_timer_initialised = true;
+        dx_Log_Debug("Timers initialized\n");
         dx_timerStart(&tmr_network_ready_cached);
+        dx_timerStart(&tmr_network_connected_cached);
     }
 
-    if ((result = dx_isNetworkReady(networkInterface))){
+    if ((result = dx_isNetworkReady(networkInterface))) {
         network_ready_cached = true;
         dx_timerOneShotSet(&tmr_network_ready_cached, &(struct timespec){15, 0});
     }
 
     dx_Log_Debug("Network ready:%d\n", result);
 
-    return result;
+    if (!result) {
+        return false;
+    }
 
-    // if the network is not ready don't bother with checking network status
-    // if (!dx_isNetworkReady()) {
-    //     return false;
-    // } else {
-    //     return true;
-    // }
+    if (network_connected_cached) {
+        return true;
+    }
 
-    // int64_t now = dx_getNowMilliseconds();
+    network_connected_result = dx_getHttpData(end_to_end_test_url);
 
-    // // Check end to end internet connection every 2 minutes
-    // // Or if previous check returned false, network not connected, but now network is ready
-    // if (!previousNetworkStatus || (now - lastNetworkStatusCheck) > 1000 * 60 * 2) {
-    //     lastNetworkStatusCheck = now;
+    if (network_connected_result == NULL) {
+        dx_Log_Debug("Network NOT connected\n");
+        return false;
+    } else {
+        dx_Log_Debug("Network connected\n");
 
-    //     if (networkInterface != NULL && strlen(networkInterface) > 0) {
-    //         // https://docs.microsoft.com/en-us/azure-sphere/reference/applibs-reference/applibs-networking/function-networking-getinterfaceconnectionstatus
-    //         if (Networking_GetInterfaceConnectionStatus(networkInterface, &status) == 0) {
-    //             if ((status & Networking_InterfaceConnectionStatus_ConnectedToInternet) == 0) {
-    //                 previousNetworkStatus = false;
-    //                 return false;
-    //             } else {
-    //                 previousNetworkStatus = true;
-    //                 return true;
-    //             }
-    //         }
-    //     } else {
-    //         // fall back to returning dx_isNetworkReady status which must be true given got this far
-    //         return true;
-    //     }
-    // }
-    // // No interface provided or status failed so fallback to isNetworkReady() which must be true
-    // // given got this far
+        free(network_connected_result);
+        network_connected_result = NULL;
+
+        network_connected_cached = true;
+        dx_timerOneShotSet(&tmr_network_connected_cached, &(struct timespec){ 120, 0});
+    }
+
     return true;
 }
 

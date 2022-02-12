@@ -2,6 +2,8 @@
 
 #include "dx_timer.h"
 #include <ctype.h>
+#include <curl/curl.h>
+#include <curl/easy.h>
 #include <errno.h>
 #include <ifaddrs.h>
 #include <pthread.h>
@@ -9,6 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -39,3 +42,4 @@ int dx_stringEndsWith(const char *str, const char *suffix);
 int64_t dx_getNowMilliseconds(void);
 void dx_Log_Debug(char *fmt, ...);
 void dx_Log_Debug_Init(char *buffer, size_t buffer_size);
+char * dx_getHttpData(const char *url);
