@@ -13,9 +13,10 @@ void dx_registerTerminationHandler(void)
 
 void dx_terminationHandler(int signalNumber)
 {
-    // Don't use Log_Debug here, as it is not guaranteed to be async-signal-safe.
-    terminationRequired = true;
+    // Don't use Log_Debug here, as it is not guaranteed to be async-signal-safe.    
     _exitCode = DX_ExitCode_TermHandler_SigTerm;
+    terminationRequired = true;
+    uv_stop(uv_default_loop());
 }
 
 void dx_terminate(int exitCode)
