@@ -20,7 +20,7 @@ bool dx_timerStart(DX_TIMER_BINDING *timer)
 
     if (!timer->initialized) {
         if (timer->delay != NULL && timer->repeat != NULL) {
-            printf("Can't specify both a timer delay and a repeat period\n");
+            printf("Can't specify both a timer delay and a repeat period for timer %s\n", timer->name);
             dx_terminate(DX_ExitCode_Create_Timer_Failed);
             return false;
         }
