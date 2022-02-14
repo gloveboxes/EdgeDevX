@@ -3,20 +3,20 @@
 static volatile sig_atomic_t terminationRequired = false;
 static volatile sig_atomic_t _exitCode = 0;
 
+static void dx_terminationHandler(int signalNumber)
+{
+    // Don't use Log_Debug here, as it is not guaranteed to be async-signal-safe.
+    _exitCode = DX_ExitCode_TermHandler_SigTerm;
+    terminationRequired = true;
+    uv_stop(uv_default_loop());
+}
+
 void dx_registerTerminationHandler(void)
 {
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
     action.sa_handler = dx_terminationHandler;
     sigaction(SIGTERM, &action, NULL);
-}
-
-void dx_terminationHandler(int signalNumber)
-{
-    // Don't use Log_Debug here, as it is not guaranteed to be async-signal-safe.    
-    _exitCode = DX_ExitCode_TermHandler_SigTerm;
-    terminationRequired = true;
-    uv_stop(uv_default_loop());
 }
 
 void dx_terminate(int exitCode)
@@ -26,21 +26,14 @@ void dx_terminate(int exitCode)
     uv_stop(uv_default_loop());
 }
 
-bool dx_isTerminationRequired(void)
-{
-    return terminationRequired;
-}
-
 int dx_getTerminationExitCode(void)
 {
     return _exitCode;
 }
 
-
 void dx_eventLoopRun(void)
 {
-    while (!terminationRequired)
-    {
+    while (!terminationRequired) {
         uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     }
 }
