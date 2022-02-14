@@ -28,7 +28,6 @@ typedef struct timespec timespec;
 
 typedef struct {
     void (*handler)(uv_timer_t *handle);
-    struct timespec period;
     struct timespec *delay;
     struct timespec *repeat;
     const char *name;

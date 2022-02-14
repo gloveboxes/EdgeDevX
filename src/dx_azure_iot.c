@@ -61,9 +61,7 @@ static IoTHubClientAuthenticationState iotHubClientAuthenticationState = IoTHubC
 
 static PROV_DEVICE_RESULT dpsRegisterStatus = PROV_DEVICE_RESULT_INVALID_STATE;
 
-static DX_TIMER_BINDING azureConnectionTimer = {.period = {0, 0}, // one-shot timer
-                                                .name = "azureConnectionTimer",
-                                                .handler = &AzureConnectionHandler};
+static DX_TIMER_BINDING azureConnectionTimer = {.name = "azureConnectionTimer", .handler = &AzureConnectionHandler};
 
 void dx_azureRegisterDeviceTwinCallback(void (*deviceTwinCallbackHandler)(DEVICE_TWIN_UPDATE_STATE updateState, const unsigned char *payload, size_t payloadSize,
                                                                           void *userContextCallback))
