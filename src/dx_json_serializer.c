@@ -44,7 +44,7 @@ bool dx_jsonSerialize(char *buffer, size_t buffer_size, int key_value_pair_count
     json_string = json_serialize_to_string(root_value);
 
     if (strlen(json_string) < buffer_size) {
-        strncpy(buffer, json_string, buffer_size);
+        DX_SAFE_STRING_COPY(buffer, json_string, buffer_size);
         result = true;
     }
 

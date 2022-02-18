@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dx_utilities.h"
 #include "parson.h"
 #include "stdarg.h"
 #include "stdbool.h"

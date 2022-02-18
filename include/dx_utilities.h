@@ -22,6 +22,8 @@
 #define IN_RANGE(number, low, high) (low <= number && high >= number)
 #define NULL_OR_EMPTY(string) (string == NULL || strlen(string) == 0)
 
+#define DX_SAFE_STRING_COPY(dest, source, length) strncpy(dest, source, length); dest[length - 1] = 0x00;
+
 bool dx_isDeviceAuthReady(void);
 bool dx_isNetworkConnected(const char *networkInterface);
 bool dx_isNetworkReady(const char *networkInterface);
