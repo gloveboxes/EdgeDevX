@@ -8,9 +8,13 @@ static bool SetUpAzureIoTHubClientWithDpsPnP(void);
 static bool SetupAzureClient(void);
 static const char *GetMessageResultReasonString(IOTHUB_MESSAGE_RESULT reason);
 static const char *GetReasonString(IOTHUB_CLIENT_CONNECTION_STATUS_REASON reason);
-static void AzureConnectionHandler(EventLoopTimer *eventLoopTimer);
+static DX_DECLARE_TIMER_HANDLER(AzureConnectionHandler);
 static void HubConnectionStatusCallback(IOTHUB_CLIENT_CONNECTION_STATUS, IOTHUB_CLIENT_CONNECTION_STATUS_REASON, void *);
 static void SendMessageCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT, void *);
+
+static bool network_ready_cached = false;
+static DX_DECLARE_TIMER_HANDLER(network_ready_expired_handler);
+static DX_TIMER_BINDING tmr_network_ready_cached = {.name = "tmr_network_ready_cached", .handler = network_ready_expired_handler};
 
 static IOTHUB_DEVICE_CLIENT_LL_HANDLE iothubClientHandle = NULL;
 
@@ -61,7 +65,7 @@ static IoTHubClientAuthenticationState iotHubClientAuthenticationState = IoTHubC
 
 static PROV_DEVICE_RESULT dpsRegisterStatus = PROV_DEVICE_RESULT_INVALID_STATE;
 
-static DX_TIMER_BINDING azureConnectionTimer = {.name = "azureConnectionTimer", .handler = &AzureConnectionHandler};
+static DX_TIMER_BINDING azureConnectionTimer = {.delay = &(struct timespec){1, 0}, .name = "azureConnectionTimer", .handler = &AzureConnectionHandler};
 
 void dx_azureRegisterDeviceTwinCallback(void (*deviceTwinCallbackHandler)(DEVICE_TWIN_UPDATE_STATE updateState, const unsigned char *payload, size_t payloadSize,
                                                                           void *userContextCallback))
@@ -113,7 +117,7 @@ static void dx_azureToDeviceStart(void)
             return;
         }
         dx_timerStart(&azureConnectionTimer);
-        dx_timerOneShotSet(&azureConnectionTimer, &(struct timespec){1, 0});
+        dx_timerStart(&tmr_network_ready_cached);
         connection_initialized = false;
     }
 }
@@ -122,6 +126,7 @@ void dx_azureToDeviceStop(void)
 {
     if (azureConnectionTimer.initialized) {
         dx_timerStop(&azureConnectionTimer);
+        dx_timerStop(&tmr_network_ready_cached);
         IoTHub_Deinit();
     }
 }
@@ -207,14 +212,33 @@ static void ProcessConnectionStatusCallbacks(bool connection_state)
     }
 }
 
+static DX_TIMER_HANDLER(network_ready_expired_handler)
+{
+    network_ready_cached = false;
+}
+DX_TIMER_HANDLER_END
+
+static bool isNetworkReady(const char* network_interface){
+    static bool connection_state = false;
+
+    if (network_ready_cached){
+        return connection_state;
+    }
+
+    connection_state = dx_isNetworkConnected(_networkInterface);
+    network_ready_cached = true;
+    dx_timerOneShotSet(&tmr_network_ready_cached, &(struct timespec){30,0});
+    return connection_state;
+}
+
 bool dx_isAzureConnected(void)
 {
-    if (!dx_isNetworkConnected(_networkInterface) && iotHubClientAuthenticationState == IoTHubClientAuthenticationState_Authenticated) {
+    if (!isNetworkReady(_networkInterface) && iotHubClientAuthenticationState == IoTHubClientAuthenticationState_Authenticated) {
         iotHubClientAuthenticationState = IoTHubClientAuthenticationState_NotAuthenticated;
         deviceConnectionState = DEVICE_NOT_CONNECTED;
         ProcessConnectionStatusCallbacks(false);
         return false;
-    } else if (iothubClientHandle != NULL && iotHubClientAuthenticationState == IoTHubClientAuthenticationState_Authenticated && dx_isNetworkConnected(_networkInterface)) {
+    } else if (iothubClientHandle != NULL && iotHubClientAuthenticationState == IoTHubClientAuthenticationState_Authenticated && isNetworkReady(_networkInterface)) {
         ProcessConnectionStatusCallbacks(true);
         return true;
     }
@@ -238,17 +262,12 @@ static void SendMessageCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void *
 /// <summary>
 ///     Azure IoT Hub DoWork Handler with back off up to 5 seconds for network disconnect
 /// </summary>
-static void AzureConnectionHandler(EventLoopTimer *eventLoopTimer)
+static DX_TIMER_HANDLER(AzureConnectionHandler)
 {
     struct timespec nextEventPeriod = {0, 0};
 
-    if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0) {
-        dx_terminate(DX_ExitCode_AzureCloudToDeviceHandler);
-        return;
-    }
-
     // network disconnected but was previously authenticated
-    if (!dx_isNetworkConnected(_networkInterface) && iotHubClientAuthenticationState == IoTHubClientAuthenticationState_Authenticated) {
+    if (!isNetworkReady(_networkInterface) && iotHubClientAuthenticationState == IoTHubClientAuthenticationState_Authenticated) {
         iotHubClientAuthenticationState = IoTHubClientAuthenticationState_NotAuthenticated;
         deviceConnectionState = DEVICE_NOT_CONNECTED;
     }
@@ -275,6 +294,7 @@ static void AzureConnectionHandler(EventLoopTimer *eventLoopTimer)
 
     dx_timerOneShotSet(&azureConnectionTimer, &nextEventPeriod);
 }
+DX_TIMER_HANDLER_END
 
 bool dx_azurePublish(const void *message, size_t messageLength, DX_MESSAGE_PROPERTY **messageProperties, size_t messagePropertyCount,
                      DX_MESSAGE_CONTENT_PROPERTIES *messageContentProperties)
@@ -433,7 +453,7 @@ static bool SetUpAzureIoTHubClientWithConnectionString(void)
     deviceConnectionState = DEVICE_NOT_CONNECTED;
 
     // If network/DAA are not ready, fail out (which will trigger a retry)
-    if (!dx_isNetworkConnected(_networkInterface) || dx_isStringNullOrEmpty(_userConfig->connection_string)) {
+    if (!isNetworkReady(_networkInterface) || dx_isStringNullOrEmpty(_userConfig->connection_string)) {
         return false;
     }
 
@@ -505,7 +525,7 @@ static bool ConnectToIotHub(const char *hostname)
 //     deviceConnectionState = DEVICE_NOT_CONNECTED;
 
 //     // If network/DAA are not ready, fail out (which will trigger a retry)
-//     if (!dx_isDeviceAuthReady() || !dx_isNetworkConnected(_networkInterface)) {
+//     if (!dx_isDeviceAuthReady() || !isNetworkReady(_networkInterface)) {
 //         return false;
 //     }
 
@@ -571,7 +591,7 @@ static bool SetUpAzureIoTHubClientWithDpsPnP(void)
     static bool security_init_called = false;
     static int provisionCompletedMaxRetry = 0;
 
-    if (!dx_isDeviceAuthReady() || !dx_isNetworkConnected(_networkInterface)) {
+    if (!dx_isDeviceAuthReady() || !isNetworkReady(_networkInterface)) {
         return false;
     }
 
