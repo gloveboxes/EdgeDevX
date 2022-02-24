@@ -11,12 +11,14 @@ static DX_DECLARE_TIMER_HANDLER(network_connected_expired_handler);
 static DX_TIMER_BINDING tmr_network_connected_cached = {.name = "tmr_network_connected_cached", .handler = network_connected_expired_handler};
 
 // Curl stuff.
-struct url_data {
+struct url_data
+{
     size_t size;
     char *data;
 };
 
-enum {
+enum
+{
     IFACE_IPv4 = (1 << 0),
     IFACE_IPv6 = (1 << 1),
     IFACE_IP = (1 << 0) | (1 << 1),
@@ -36,7 +38,8 @@ bool dx_isStringNullOrEmpty(const char *string)
 /// <returns></returns>
 bool dx_isStringPrintable(char *data)
 {
-    while (isprint(*data)) {
+    while (isprint(*data))
+    {
         data++;
     }
     return 0x00 == *data;
@@ -52,10 +55,14 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, struct url_data *
 
     tmp = (char *)realloc(data->data, data->size + 1); /* +1 for '\0' */
 
-    if (tmp) {
+    if (tmp)
+    {
         data->data = tmp;
-    } else {
-        if (data->data) {
+    }
+    else
+    {
+        if (data->data)
+        {
             free(data->data);
         }
         return 0;
@@ -92,10 +99,13 @@ char *dx_getHttpData(const char *url)
     res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
 
-    if (res == CURLE_OK) {
+    if (res == CURLE_OK)
+    {
         // caller is responsible for freeing this.
         return data.data;
-    } else {
+    }
+    else
+    {
         free(data.data);
     }
 
@@ -110,8 +120,10 @@ bool dx_isNetworkReady(void)
     if (getifaddrs(&list) == -1)
         return 0;
 
-    for (curr = list; curr != NULL; curr = curr->ifa_next) {        
-        if (strcmp("lo", curr->ifa_name) != 0) {
+    for (curr = list; curr != NULL; curr = curr->ifa_next)
+    {
+        if (strcmp("lo", curr->ifa_name) != 0)
+        {
             if (curr->ifa_addr->sa_family == AF_INET)
                 result |= IFACE_IPv4;
             if (curr->ifa_addr->sa_family == AF_INET6)
@@ -120,8 +132,8 @@ bool dx_isNetworkReady(void)
     }
 
     freeifaddrs(list);
-
     errno = 0;
+    
     return result;
 }
 
@@ -136,15 +148,14 @@ bool dx_isNetworkConnected(const char *networkInterface)
     bool network_ready = false;
     char *network_connected_result = NULL;
 
-    if (!network_timer_initialised) {
+    if (!network_timer_initialised)
+    {
         network_timer_initialised = true;
         dx_timerStart(&tmr_network_connected_cached);
     }
 
-    network_ready = dx_isNetworkReady();
-
-    if (!network_ready) {
-        return false;
+    if (!(network_ready = dx_isNetworkReady())){
+        return network_ready;
     }
 
     // no network interface provided for end to end test so we'll go with the result of dx_isNetworkReady result
@@ -166,7 +177,7 @@ bool dx_isNetworkConnected(const char *networkInterface)
 
         network_connected_cached = true;
         // 3 minute cache on end to end testing
-        dx_timerOneShotSet(&tmr_network_connected_cached, &(struct timespec){ 3 * 60, 0});
+        dx_timerOneShotSet(&tmr_network_connected_cached, &(struct timespec){3 * 60, 0});
     }
 
     return true;
@@ -225,7 +236,8 @@ bool dx_startThreadDetached(void *(daemon)(void *), void *arg, char *daemon_name
 
     printf("Starting thread %s detached\n", daemon_name);
 
-    if (pthread_create(&thread, &attr, daemon, arg)) {
+    if (pthread_create(&thread, &attr, daemon, arg))
+    {
         printf("ERROR: Failed to start %s daemon.\n", daemon_name);
         return false;
     }
@@ -240,7 +252,8 @@ void dx_Log_Debug_Init(char *buffer, size_t buffer_size)
 
 void dx_Log_Debug(char *fmt, ...)
 {
-    if (_log_debug_buffer == NULL) {
+    if (_log_debug_buffer == NULL)
+    {
         printf("log_debug_buffer is NULL. Call Log_Debug_Time_Init first");
         return;
     }
