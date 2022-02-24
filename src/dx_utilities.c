@@ -122,7 +122,7 @@ bool dx_isNetworkReady(void)
 
     for (curr = list; curr != NULL; curr = curr->ifa_next)
     {
-        if (strcmp("lo", curr->ifa_name) != 0)
+        if (strncmp("lo", curr->ifa_name, 2) != 0)
         {
             if (curr->ifa_addr->sa_family == AF_INET)
                 result |= IFACE_IPv4;
