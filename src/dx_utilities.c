@@ -2,15 +2,12 @@
 
 static char *_log_debug_buffer = NULL;
 static size_t _log_debug_buffer_size;
-static bool network_timer_initialised = false;
-static bool network_ready_cached = false;
+static volatile bool network_timer_initialised = false;
 static bool network_connected_cached = false;
 
 static const char end_to_end_test_url[] = "http://www.msftconnecttest.com";
 
-static DX_DECLARE_TIMER_HANDLER(network_ready_expired_handler);
 static DX_DECLARE_TIMER_HANDLER(network_connected_expired_handler);
-static DX_TIMER_BINDING tmr_network_ready_cached = {.name = "tmr_network_ready_cached", .handler = network_ready_expired_handler};
 static DX_TIMER_BINDING tmr_network_connected_cached = {.name = "tmr_network_connected_cached", .handler = network_connected_expired_handler};
 
 // Curl stuff.
@@ -105,21 +102,16 @@ char *dx_getHttpData(const char *url)
     return NULL;
 }
 
-bool dx_isNetworkReady(const char *networkInterface)
+bool dx_isNetworkReady(void)
 {
     struct ifaddrs *curr, *list = NULL;
     int result = 0;
 
-    if (!networkInterface || !(*networkInterface)) {
-        errno = EINVAL;
-        return 0;
-    }
-
     if (getifaddrs(&list) == -1)
         return 0;
 
-    for (curr = list; curr != NULL; curr = curr->ifa_next) {
-        if (!strcmp(networkInterface, curr->ifa_name)) {
+    for (curr = list; curr != NULL; curr = curr->ifa_next) {        
+        if (strcmp("lo", curr->ifa_name) != 0) {
             if (curr->ifa_addr->sa_family == AF_INET)
                 result |= IFACE_IPv4;
             if (curr->ifa_addr->sa_family == AF_INET6)
@@ -133,12 +125,6 @@ bool dx_isNetworkReady(const char *networkInterface)
     return result;
 }
 
-DX_TIMER_HANDLER(network_ready_expired_handler)
-{
-    network_ready_cached = false;
-}
-DX_TIMER_HANDLER_END
-
 DX_TIMER_HANDLER(network_connected_expired_handler)
 {
     network_connected_cached = false;
@@ -147,30 +133,27 @@ DX_TIMER_HANDLER_END
 
 bool dx_isNetworkConnected(const char *networkInterface)
 {
-    bool result = false;
+    bool network_ready = false;
     char *network_connected_result = NULL;
-
-    if (network_ready_cached) {
-        return true;
-    }
 
     if (!network_timer_initialised) {
         network_timer_initialised = true;
-        dx_timerStart(&tmr_network_ready_cached);
         dx_timerStart(&tmr_network_connected_cached);
     }
 
-    if ((result = dx_isNetworkReady(networkInterface))) {
-        network_ready_cached = true;
-        dx_timerOneShotSet(&tmr_network_ready_cached, &(struct timespec){20, 0});
-    }
+    network_ready = dx_isNetworkReady();
 
-    if (!result) {
+    if (!network_ready) {
         return false;
     }
 
+    // no network interface provided for end to end test so we'll go with the result of dx_isNetworkReady result
+    if (dx_isStringNullOrEmpty(networkInterface)){
+        return network_ready;
+    }
+
     if (network_connected_cached) {
-        return true;
+        return network_ready;
     }
 
     network_connected_result = dx_getHttpData(end_to_end_test_url);

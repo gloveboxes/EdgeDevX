@@ -26,7 +26,7 @@
 
 bool dx_isDeviceAuthReady(void);
 bool dx_isNetworkConnected(const char *networkInterface);
-bool dx_isNetworkReady(const char *networkInterface);
+bool dx_isNetworkReady(void);
 bool dx_isStringNullOrEmpty(const char *string);
 
 /// <summary>
