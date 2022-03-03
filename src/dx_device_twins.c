@@ -17,11 +17,11 @@ static void DeviceTwinCallbackHandler(DEVICE_TWIN_UPDATE_STATE updateState, cons
 
 static DX_DEVICE_TWIN_BINDING **_deviceTwins = NULL;
 static size_t _deviceTwinCount = 0;
+static IOTHUB_DEVICE_CLIENT_LL_HANDLE *_iothubClientHandle;
 
 void dx_deviceTwinSubscribe(DX_DEVICE_TWIN_BINDING *deviceTwins[], size_t deviceTwinCount)
 {
-    dx_azureRegisterDeviceTwinCallback(DeviceTwinCallbackHandler);
-
+    _iothubClientHandle = dx_azureRegisterDeviceTwinCallback(DeviceTwinCallbackHandler);
     _deviceTwins = deviceTwins;
     _deviceTwinCount = deviceTwinCount;
 
@@ -406,24 +406,17 @@ static bool deviceTwinReportState(DX_DEVICE_TWIN_BINDING *deviceTwinBinding, voi
 
 static bool deviceTwinUpdateReportedState(char *reportedPropertiesString)
 {
-    if (IoTHubDeviceClient_LL_SendReportedState(
-            dx_azureClientHandleGet(), (unsigned char *)reportedPropertiesString,
-            strlen(reportedPropertiesString), deviceTwinsReportStatusCallback,
-            0) != IOTHUB_CLIENT_OK) {
-#if DX_LOGGING_ENABLED
-        printf("ERROR: failed to set reported state for '%s'.\n", reportedPropertiesString);
-#endif
-
+    if (*_iothubClientHandle == NULL) {
         return false;
-    } else {
-#if DX_LOGGING_ENABLED
-        printf("INFO: Reported state propertyUpdated '%s'.\n", reportedPropertiesString);
-#endif
-
-        return true;
+    }
+    
+    if (IoTHubDeviceClient_LL_SendReportedState(*_iothubClientHandle, (unsigned char *)reportedPropertiesString, 
+                        strlen(reportedPropertiesString), deviceTwinsReportStatusCallback, 0) != IOTHUB_CLIENT_OK) {
+        printf("ERROR: failed to set reported state for '%s'.\n", reportedPropertiesString);
+        return false;
     }
 
-    // IoTHubDeviceClient_LL_DoWork(dx_azureClientHandleGet());
+    return true;
 }
 
 /// <summary>

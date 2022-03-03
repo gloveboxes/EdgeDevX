@@ -62,13 +62,6 @@ bool dx_azurePublish(const void *message, size_t messageLength, DX_MESSAGE_PROPE
                      DX_MESSAGE_CONTENT_PROPERTIES *messageContentProperties);
 
 /// <summary>
-/// Exposed for Device Twins. Not for general use.
-/// </summary>
-/// <param name=""></param>
-/// <returns></returns>
-IOTHUB_DEVICE_CLIENT_LL_HANDLE dx_azureClientHandleGet(void);
-
-/// <summary>
 /// Initialise Azure IoT Hub/Connection connection, passing in network interface for connecting testing and IoT Plug and Play model id.
 /// Cloud to device messages is also enabled. For information on Plug and Play see
 /// https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play
@@ -108,7 +101,7 @@ void dx_azureUnregisterConnectionChangedNotification(void (*connectionStatusCall
 /// Register Device Twin callback to process an Azure IoT device twin message
 /// </summary>
 /// <param name="deviceTwinCallbackHandler"></param>
-void dx_azureRegisterDeviceTwinCallback(void (*deviceTwinCallbackHandler)(DEVICE_TWIN_UPDATE_STATE updateState,
+IOTHUB_DEVICE_CLIENT_LL_HANDLE * dx_azureRegisterDeviceTwinCallback(void (*deviceTwinCallbackHandler)(DEVICE_TWIN_UPDATE_STATE updateState,
                                                                           const unsigned char *payload, size_t payloadSize,
                                                                           void *userContextCallback));
 
