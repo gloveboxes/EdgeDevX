@@ -212,7 +212,7 @@ char *dx_getLocalTime(char *buffer, size_t bufferSize)
 {
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
-    strftime(buffer, bufferSize - 1, "%Y-%m-%d %H:%M:%S", t);
+    strftime(buffer, bufferSize - 1, "%Y-%m-%dT%H:%M:%SZ", t);
     return buffer;
 }
 
