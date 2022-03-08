@@ -208,6 +208,14 @@ char *dx_getCurrentUtc(char *buffer, size_t bufferSize)
     return buffer;
 }
 
+char *dx_getLocalTime(char *buffer, size_t bufferSize)
+{
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    strftime(buffer, bufferSize - 1, "%Y-%m-%d %H:%M:%S", t);
+    return buffer;
+}
+
 int64_t dx_getNowMilliseconds(void)
 {
     struct timespec now = {0, 0};
