@@ -94,20 +94,20 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         target_include_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/include)
         target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/lib)
 
-        set(ENV{PKG_CONFIG_PATH} "/opt/homebrew/opt/openssl@3/lib/pkgconfig")
-        find_package(PkgConfig REQUIRED)
-        find_package(OpenSSL REQUIRED)
+        # set(ENV{PKG_CONFIG_PATH} "/opt/homebrew/opt/openssl@3/lib/pkgconfig")
+        # find_package(PkgConfig REQUIRED)
+        # find_package(OpenSSL REQUIRED)
     else()
     # macOS on Intel
         target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
         target_link_directories(${PROJECT_NAME} PUBLIC /usr/local/lib)
 
-        set(ENV{PKG_CONFIG_PATH} "/usr/local/opt/openssl@3/lib/pkgconfig")
-        find_package(PkgConfig REQUIRED)
-        find_package(OpenSSL REQUIRED)
+        # set(ENV{PKG_CONFIG_PATH} "/usr/local/opt/openssl@3/lib/pkgconfig")
+        # find_package(PkgConfig REQUIRED)
+        # find_package(OpenSSL REQUIRED)
     endif()
 else()
-    target_link_libraries (${PROJECT_NAME} ssl crypto)
+    # target_link_libraries (${PROJECT_NAME} ssl crypto)
 endif()
 
 
