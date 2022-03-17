@@ -93,15 +93,23 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm64")
         target_include_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/include)
         target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/lib)
-        target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/Cellar/openssl@3/3.0.1/lib/)
+
+        set(ENV{PKG_CONFIG_PATH} "/opt/homebrew/opt/openssl@3/lib/pkgconfig")
+        find_package(PkgConfig REQUIRED)
+        find_package(OpenSSL REQUIRED)
     else()
     # macOS on Intel
         target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
         target_link_directories(${PROJECT_NAME} PUBLIC /usr/local/lib)
-        target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/opt/openssl@3/include)
-        target_link_directories(${PROJECT_NAME} PUBLIC /usr/local/opt/openssl@3/lib)
+
+        set(ENV{PKG_CONFIG_PATH} "/usr/local/opt/openssl@3/lib/pkgconfig")
+        find_package(PkgConfig REQUIRED)
+        find_package(OpenSSL REQUIRED)
     endif()
+else()
+    target_link_libraries (${PROJECT_NAME} ssl crypto)
 endif()
+
 
 target_link_libraries (${PROJECT_NAME}
     uv
@@ -116,8 +124,6 @@ target_link_libraries (${PROJECT_NAME}
     uuid
     pthread
     curl
-    ssl
-    crypto
     m
     prov_device_ll_client
     prov_mqtt_transport
