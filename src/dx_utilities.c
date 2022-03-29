@@ -11,10 +11,9 @@ static DX_DECLARE_TIMER_HANDLER(network_connected_expired_handler);
 static DX_TIMER_BINDING tmr_network_connected_cached = {.name = "tmr_network_connected_cached", .handler = network_connected_expired_handler};
 
 // Curl stuff.
-struct url_data
-{
+struct MemoryStruct {
+    char *memory;
     size_t size;
-    char *data;
 };
 
 enum
@@ -45,68 +44,75 @@ bool dx_isStringPrintable(char *data)
     return 0x00 == *data;
 }
 
-static size_t write_data(void *ptr, size_t size, size_t nmemb, struct url_data *data)
+static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
-    size_t index = data->size;
-    size_t n = (size * nmemb);
-    char *tmp;
+    size_t realsize = size * nmemb;
+    struct MemoryStruct *mem = (struct MemoryStruct *)userp;
 
-    data->size += (size * nmemb);
-
-    tmp = (char *)realloc(data->data, data->size + 1); /* +1 for '\0' */
-
-    if (tmp)
-    {
-        data->data = tmp;
-    }
-    else
-    {
-        if (data->data)
-        {
-            free(data->data);
-        }
+    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+    if (!ptr) {
+        /* out of memory! */
+        printf("not enough memory (realloc returned NULL)\n");
         return 0;
     }
 
-    memcpy((data->data + index), ptr, n);
-    data->data[data->size] = '\0';
+    mem->memory = ptr;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
 
-    return size * nmemb;
+    return realsize;
 }
 
+// https://curl.se/libcurl/c/getinmemory.html
 char *dx_getHttpData(const char *url)
 {
-    struct url_data data;
+    static bool curl_initialized = false;
+    CURL *curl_handle;
+    CURLcode res;
 
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+    if (!curl_initialized) {
+        curl_global_init(CURL_GLOBAL_ALL);
+        curl_initialized = true;
+    }
 
-    data.size = 0;
-    data.data = malloc(1);
+    struct MemoryStruct chunk;
 
-    CURLcode res = CURLE_OK;
+    chunk.memory = malloc(1); /* will be grown as needed by the realloc above */
+    chunk.size = 0;           /* no data at this point */
 
-    CURL *curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_URL, url);
+    /* init the curl session */
+    curl_handle = curl_easy_init();
+
+    /* specify URL to get */
+    curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+
     /* use a GET to fetch data */
-    curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+    curl_easy_setopt(curl_handle, CURLOPT_HTTPGET, 1L);
+
+    /* send all data to this function  */
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+
+    /* we pass our 'chunk' struct to the callback function */
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    /* some servers do not like requests that are made without a user-agent
+       field, so we provide one */
+    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 
     // based on the libcurl sample - https://curl.se/libcurl/c/https.html
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 
-    /* Perform the request */
-    res = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
+    /* get it! */
+    res = curl_easy_perform(curl_handle);
 
-    if (res == CURLE_OK)
-    {
+    curl_easy_cleanup(curl_handle);
+
+    if (res == CURLE_OK) {
         // caller is responsible for freeing this.
-        return data.data;
-    }
-    else
-    {
-        free(data.data);
+        return chunk.memory;
+    } else {
+        free(chunk.memory);
     }
 
     return NULL;
