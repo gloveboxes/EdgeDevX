@@ -65,7 +65,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 }
 
 // https://curl.se/libcurl/c/getinmemory.html
-char *dx_getHttpData(const char *url)
+char *dx_getHttpData(const char *url, long timeout)
 {
     static bool curl_initialized = false;
     CURL *curl_handle;
@@ -89,6 +89,9 @@ char *dx_getHttpData(const char *url)
 
     /* use a GET to fetch data */
     curl_easy_setopt(curl_handle, CURLOPT_HTTPGET, 1L);
+
+    /* Set timeout */
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, timeout);
 
     /* send all data to this function  */
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -173,7 +176,7 @@ bool dx_isNetworkConnected(const char *networkInterface)
         return network_ready;
     }
 
-    network_connected_result = dx_getHttpData(end_to_end_test_url);
+    network_connected_result = dx_getHttpData(end_to_end_test_url, 1);
 
     if (network_connected_result == NULL) {
         return false;
