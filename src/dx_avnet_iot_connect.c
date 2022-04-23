@@ -38,7 +38,8 @@ gw_child_list_node_t* gwChildrenListHead = NULL;
 static const int AVNET_IOT_DEFAULT_POLL_PERIOD_SECONDS = 15; 
 
 // Forward function declarations
-static void MonitorAvnetConnectionHandler(EventLoopTimer *timer);
+// static void MonitorAvnetConnectionHandler(EventLoopTimer *timer);
+static DX_DECLARE_TIMER_HANDLER(MonitorAvnetConnectionHandler);
 static void IoTCSend200HelloMessage(void);
 static IOTHUBMESSAGE_DISPOSITION_RESULT ReceiveMessageCallback(IOTHUB_MESSAGE_HANDLE, void *);
 static const char *ErrorCodeToString(int iotConnectErrorCode);
@@ -96,13 +97,8 @@ void dx_avnetConnect(DX_USER_CONFIG *userConfig, const char *networkInterface)
 /// <summary>
 /// IoTConnect timer event:  Check for response status and send hello message
 /// </summary>
-static void MonitorAvnetConnectionHandler(EventLoopTimer *timer)
+static DX_TIMER_HANDLER(MonitorAvnetConnectionHandler)
 {
-    if (ConsumeEventLoopTimerEvent(timer) != 0) {
-        dx_terminate(DX_ExitCode_IoTCTimer_Consume);
-        return;
-    }
-
     // If we're not connected to IoTConnect, then fall through to re-send the hello message
     if (!avnetConnected) {
 
@@ -111,6 +107,7 @@ static void MonitorAvnetConnectionHandler(EventLoopTimer *timer)
         }
     }
 }
+DX_TIMER_HANDLER_END
 
 /// <summary>
 ///     Callback function invoked when a C2D message is received from IoT Hub.

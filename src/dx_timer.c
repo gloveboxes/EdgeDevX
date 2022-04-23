@@ -1,110 +1,178 @@
 #include "dx_timer.h"
 
+static bool initialized = false;
+static struct event_base *base;
+
+static void init_event_loop(void)
+{
+	if (!initialized)
+	{
+		base        = event_base_new();
+		initialized = true;
+	}
+}
+
 bool dx_timerChange(DX_TIMER_BINDING *timer, const struct timespec *repeat)
 {
-    if (!timer->initialized)
-    {
-        return false;
-    }
+	struct timeval tv;
 
-    uint64_t timer_ms = repeat->tv_sec * 1000;
-    timer_ms = timer_ms + repeat->tv_nsec / 1000000;
-    uv_timer_set_repeat(&timer->timer_handle, timer_ms);
+	if (!timer->event_handle)
+	{
+		return false;
+	}
 
-    return true;
+	event_del(timer->event_handle);
+
+	tv.tv_sec  = repeat->tv_sec;
+	tv.tv_usec = repeat->tv_nsec / 1000;
+
+	int result = event_add(timer->event_handle, &tv);
+
+	return true;
 }
 
 bool dx_timerStart(DX_TIMER_BINDING *timer)
 {
-    uint64_t period_ms = 0;
+	uint64_t period_ms = 0;
+	struct timeval tv;
+	evutil_timerclear(&tv);
 
-    if (!timer->initialized) {
-        if (timer->delay != NULL && timer->repeat != NULL) {
-            printf("Can't specify both a timer delay and a repeat period for timer %s\n", timer->name);
-            dx_terminate(DX_ExitCode_Create_Timer_Failed);
-            return false;
-        }
+	if (!timer->event_handle)
+	{
+		if (timer->delay != NULL && timer->repeat != NULL)
+		{
+			printf("Can't specify both a timer delay and a repeat period for timer %s\n", timer->name);
+			dx_terminate(DX_ExitCode_Create_Timer_Failed);
+			return false;
+		}
 
-        uv_timer_init(uv_default_loop(), &timer->timer_handle);
+		init_event_loop();
 
-        if (timer->delay != NULL) {
-            uint64_t timer_ms = timer->delay->tv_sec * 1000;
-            timer_ms = timer_ms + timer->delay->tv_nsec / 1000000;
-            uv_timer_start(&timer->timer_handle, timer->handler, timer_ms, 0);
+		if (timer->delay != NULL)
+		{
+			tv.tv_sec  = timer->delay->tv_sec;
+			tv.tv_usec = timer->delay->tv_nsec / 1000;
 
-        } else if (timer->repeat != NULL) {
-            uint64_t timer_ms = timer->repeat->tv_sec * 1000;
-            timer_ms = timer_ms + timer->repeat->tv_nsec / 1000000;
-            uv_timer_start(&timer->timer_handle, timer->handler, timer_ms, timer_ms);
-        }
-        
-        timer->initialized = true;
-        return true;
-    }
-    return true;
+			timer->event_handle = event_new(base, -1, 0, timer->handler, (void *)timer->event_handle);
+			if (timer->event_handle)
+			{
+				event_add(timer->event_handle, &tv);
+			}
+			else
+			{
+				printf("oneshot event_new failed\n");
+				dx_terminate(DX_ExitCode_Create_Timer_Failed);
+			}
+		}
+		else if (timer->repeat != NULL)
+		{
+			tv.tv_sec  = timer->repeat->tv_sec;
+			tv.tv_usec = timer->repeat->tv_nsec / 1000;
+
+			timer->event_handle =
+				event_new(base, -1, EV_PERSIST, timer->handler, (void *)timer->event_handle);
+			if (timer->event_handle)
+			{
+				event_add(timer->event_handle, &tv);
+			}
+			else
+			{
+				printf("repeat event_new failed\n");
+				dx_terminate(DX_ExitCode_Create_Timer_Failed);
+			}
+		}
+		else
+		{
+			timer->event_handle = event_new(base, -1, 0, timer->handler, (void *)timer->event_handle);
+			if (!timer->event_handle)
+			{
+				printf("oneshot event_new failed\n");
+				dx_terminate(DX_ExitCode_Create_Timer_Failed);
+			}
+		}
+	}
+	return true;
 }
 
 void dx_timerSetStart(DX_TIMER_BINDING *timerSet[], size_t timerCount)
 {
-    for (int i = 0; i < timerCount; i++)
-    {
-        if (!dx_timerStart(timerSet[i]))
-        {
-            break;
-        };
-    }
+	for (int i = 0; i < timerCount; i++)
+	{
+		if (!dx_timerStart(timerSet[i]))
+		{
+			break;
+		};
+	}
 }
 
 void dx_timerStop(DX_TIMER_BINDING *timer)
 {
-    if (timer->initialized)
-    {
-        uv_timer_stop(&timer->timer_handle);
-        timer->initialized = false;
-    }
+	if (timer->event_handle != NULL)
+	{
+		event_free(timer->event_handle);
+		timer->event_handle = NULL;
+	}
 }
 
 void dx_timerSetStop(DX_TIMER_BINDING *timerSet[], size_t timerCount)
 {
-    for (int i = 0; i < timerCount; i++)
-    {
-        dx_timerStop(timerSet[i]);
-    }
+	for (int i = 0; i < timerCount; i++)
+	{
+		dx_timerStop(timerSet[i]);
+	}
 }
 
 bool dx_timerStateSet(DX_TIMER_BINDING *timer, bool state)
 {
-    if (state)
-    {
-        return dx_timerStart(timer);
-    }
-    else
-    {
-        dx_timerStop(timer);
-        return true;
-    }
+	if (state)
+	{
+		return dx_timerStart(timer);
+	}
+	else
+	{
+		dx_timerStop(timer);
+		return true;
+	}
 }
 
 void dx_timerEventLoopStop(void)
 {
-    uv_loop_close(uv_default_loop());
+	if (!base)
+	{
+		event_base_free(base);
+	}
 }
 
 bool dx_timerOneShotSet(DX_TIMER_BINDING *timer, const struct timespec *period)
 {
-    if (timer->initialized)
-    {
-        int64_t period_ms = period->tv_sec * 1000;
-        period_ms = period_ms + period->tv_nsec / 1000000;
+	if (timer->event_handle != NULL)
+	{
+		struct timeval tv;
+		tv.tv_sec  = period->tv_sec;
+		tv.tv_usec = period->tv_nsec / 1000;
 
-        uv_timer_start(&timer->timer_handle, timer->handler, period_ms, 0);
+		// if (event_add(&timer->event_handle, &tv))
+		if (event_add(timer->event_handle, &tv))
+		{
+			printf("Error setting oneshot timer\n");
+		}
 
-        return true;
-    }
-    return false;
+		return true;
+	}
+	return false;
 }
 
 int ConsumeEventLoopTimerEvent(EventLoopTimer *eventLoopTimer)
 {
-    return 0;
+	return 0;
+}
+
+void dx_eventLoopRun(void)
+{
+	event_base_dispatch(base);
+}
+
+void dx_eventLoopStop(void)
+{
+	event_base_loopexit(base, NULL);
 }

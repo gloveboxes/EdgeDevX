@@ -111,7 +111,7 @@ static void dx_azureToDeviceStart(void)
 {
     int iothubInitResult;
 
-    if (!azureConnectionTimer.initialized) {
+    if (!azureConnectionTimer.event_handle) {
         if ((iothubInitResult = IoTHub_Init()) != 0) {
             dx_Log_Debug("Failure to initialize IoT hub client, error=%d\n", iothubInitResult);
             dx_terminate(DX_ExitCode_Init_IoT_Failed);
@@ -125,7 +125,7 @@ static void dx_azureToDeviceStart(void)
 
 void dx_azureToDeviceStop(void)
 {
-    if (azureConnectionTimer.initialized) {
+    if (azureConnectionTimer.event_handle) {
         dx_timerStop(&azureConnectionTimer);
         dx_timerStop(&tmr_network_ready_cached);
         IoTHub_Deinit();

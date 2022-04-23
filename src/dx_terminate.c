@@ -1,14 +1,12 @@
 #include "dx_terminate.h"
 
-static volatile sig_atomic_t terminationRequired = false;
 static volatile sig_atomic_t _exitCode = 0;
 
 static void dx_terminationHandler(int signalNumber)
 {
     // Don't use Log_Debug here, as it is not guaranteed to be async-signal-safe.
     _exitCode = DX_ExitCode_TermHandler_SigTerm;
-    terminationRequired = true;
-    uv_stop(uv_default_loop());
+    dx_eventLoopStop();
 }
 
 void dx_registerTerminationHandler(void)
@@ -22,18 +20,10 @@ void dx_registerTerminationHandler(void)
 void dx_terminate(int exitCode)
 {
     _exitCode = exitCode;
-    terminationRequired = true;
-    uv_stop(uv_default_loop());
+    dx_eventLoopStop();
 }
 
 int dx_getTerminationExitCode(void)
 {
     return _exitCode;
-}
-
-void dx_eventLoopRun(void)
-{
-    while (!terminationRequired) {
-        uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-    }
 }
