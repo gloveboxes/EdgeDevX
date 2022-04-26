@@ -253,7 +253,9 @@ bool dx_deviceTwinAckDesiredValue(DX_DEVICE_TWIN_BINDING *deviceTwinBinding, voi
 /// </summary>
 bool dx_deviceTwinReportValue(DX_DEVICE_TWIN_BINDING *deviceTwinBinding, void *state)
 {
-    return deviceTwinReportState(deviceTwinBinding, state, false, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
+    bool result = deviceTwinReportState(deviceTwinBinding, state, false, DX_DEVICE_TWIN_RESPONSE_COMPLETED);    
+    IoTHubDeviceClient_LL_DoWork(*_iothubClientHandle);
+    return result;
 }
 
 /// <summary>

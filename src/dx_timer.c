@@ -33,10 +33,6 @@ bool dx_timerChange(DX_TIMER_BINDING *timer, const struct timespec *repeat)
 
 bool dx_timerStart(DX_TIMER_BINDING *timer)
 {
-	uint64_t period_ms = 0;
-	struct timeval tv;
-	evutil_timerclear(&tv);
-
 	if (!timer->event_handle)
 	{
 		if (timer->delay != NULL && timer->repeat != NULL)
@@ -50,13 +46,11 @@ bool dx_timerStart(DX_TIMER_BINDING *timer)
 
 		if (timer->delay != NULL)
 		{
-			tv.tv_sec  = timer->delay->tv_sec;
-			tv.tv_usec = timer->delay->tv_nsec / 1000;
-
 			timer->event_handle = event_new(base, -1, 0, timer->handler, (void *)timer->event_handle);
 			if (timer->event_handle)
 			{
-				event_add(timer->event_handle, &tv);
+				event_add(timer->event_handle,
+					&(struct timeval){timer->delay->tv_sec, timer->delay->tv_nsec / 1000});
 			}
 			else
 			{
@@ -66,14 +60,12 @@ bool dx_timerStart(DX_TIMER_BINDING *timer)
 		}
 		else if (timer->repeat != NULL)
 		{
-			tv.tv_sec  = timer->repeat->tv_sec;
-			tv.tv_usec = timer->repeat->tv_nsec / 1000;
-
 			timer->event_handle =
 				event_new(base, -1, EV_PERSIST, timer->handler, (void *)timer->event_handle);
 			if (timer->event_handle)
 			{
-				event_add(timer->event_handle, &tv);
+				event_add(timer->event_handle,
+					&(struct timeval){timer->repeat->tv_sec, timer->repeat->tv_nsec / 1000});
 			}
 			else
 			{
@@ -147,12 +139,7 @@ bool dx_timerOneShotSet(DX_TIMER_BINDING *timer, const struct timespec *period)
 {
 	if (timer->event_handle != NULL)
 	{
-		struct timeval tv;
-		tv.tv_sec  = period->tv_sec;
-		tv.tv_usec = period->tv_nsec / 1000;
-
-		// if (event_add(&timer->event_handle, &tv))
-		if (event_add(timer->event_handle, &tv))
+		if (event_add(timer->event_handle, &(struct timeval){period->tv_sec, period->tv_nsec / 1000}))
 		{
 			printf("Error setting oneshot timer\n");
 		}

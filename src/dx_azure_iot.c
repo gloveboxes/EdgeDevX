@@ -363,6 +363,8 @@ cleanup:
         IoTHubMessage_Destroy(messageHandle);
     }
 
+    IoTHubDeviceClient_LL_DoWork(iothubClientHandle);
+
     return result == IOTHUB_CLIENT_OK;
 }
 
