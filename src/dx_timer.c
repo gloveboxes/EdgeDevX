@@ -14,8 +14,6 @@ static void init_event_loop(void)
 
 bool dx_timerChange(DX_TIMER_BINDING *timer, const struct timespec *repeat)
 {
-	struct timeval tv;
-
 	if (!timer->event_handle)
 	{
 		return false;
@@ -23,10 +21,10 @@ bool dx_timerChange(DX_TIMER_BINDING *timer, const struct timespec *repeat)
 
 	event_del(timer->event_handle);
 
-	tv.tv_sec  = repeat->tv_sec;
-	tv.tv_usec = repeat->tv_nsec / 1000;
+	timer->_period.tv_sec  = repeat->tv_sec;
+	timer->_period.tv_usec = repeat->tv_nsec / 1000;
 
-	int result = event_add(timer->event_handle, &tv);
+	int result = event_add(timer->event_handle, &timer->_period);
 
 	return true;
 }
@@ -49,8 +47,10 @@ bool dx_timerStart(DX_TIMER_BINDING *timer)
 			timer->event_handle = event_new(base, -1, 0, timer->handler, (void *)timer->event_handle);
 			if (timer->event_handle)
 			{
-				event_add(timer->event_handle,
-					&(struct timeval){timer->delay->tv_sec, timer->delay->tv_nsec / 1000});
+				timer->_period.tv_sec  = timer->delay->tv_sec;
+				timer->_period.tv_usec = timer->delay->tv_nsec / 1000;
+
+				event_add(timer->event_handle, &timer->_period);
 			}
 			else
 			{
@@ -64,8 +64,10 @@ bool dx_timerStart(DX_TIMER_BINDING *timer)
 				event_new(base, -1, EV_PERSIST, timer->handler, (void *)timer->event_handle);
 			if (timer->event_handle)
 			{
-				event_add(timer->event_handle,
-					&(struct timeval){timer->repeat->tv_sec, timer->repeat->tv_nsec / 1000});
+				timer->_period.tv_sec  = timer->repeat->tv_sec;
+				timer->_period.tv_usec = timer->repeat->tv_nsec / 1000;
+
+				event_add(timer->event_handle, &timer->_period);
 			}
 			else
 			{
@@ -137,9 +139,12 @@ void dx_timerEventLoopStop(void)
 
 bool dx_timerOneShotSet(DX_TIMER_BINDING *timer, const struct timespec *period)
 {
-	if (timer->event_handle != NULL)
+	if (timer->event_handle != NULL && period != NULL)
 	{
-		if (event_add(timer->event_handle, &(struct timeval){period->tv_sec, period->tv_nsec / 1000}))
+		timer->_period.tv_sec  = period->tv_sec;
+		timer->_period.tv_usec = period->tv_nsec / 1000;
+
+		if (event_add(timer->event_handle, &timer->_period))
 		{
 			printf("Error setting oneshot timer\n");
 		}

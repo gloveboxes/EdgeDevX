@@ -33,6 +33,7 @@ typedef struct
     struct timespec *repeat;
     const char *name;
     EventLoopTimer *event_handle;
+    struct timeval _period;
 } DX_TIMER_BINDING;
 
 int ConsumeEventLoopTimerEvent(EventLoopTimer *eventLoopTimer);
