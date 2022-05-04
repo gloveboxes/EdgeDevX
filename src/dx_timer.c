@@ -2,6 +2,7 @@
 
 static bool initialized = false;
 static struct event_base *base;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void init_event_loop(void)
 {
@@ -14,43 +15,45 @@ static void init_event_loop(void)
 
 bool dx_timerChange(DX_TIMER_BINDING *timer, const struct timespec *repeat)
 {
+	pthread_mutex_lock(&mutex);
+
 	if (!timer->event_handle)
 	{
+		pthread_mutex_unlock(&mutex);
 		return false;
 	}
 
 	event_del(timer->event_handle);
 
-	timer->_period.tv_sec  = repeat->tv_sec;
-	timer->_period.tv_usec = repeat->tv_nsec / 1000;
+	int result = event_add(timer->event_handle, &(struct timeval){repeat->tv_sec, repeat->tv_nsec / 1000});
 
-	int result = event_add(timer->event_handle, &timer->_period);
-
+	pthread_mutex_unlock(&mutex);
 	return true;
 }
 
 bool dx_timerStart(DX_TIMER_BINDING *timer)
 {
+	pthread_mutex_lock(&mutex);
+
 	if (!timer->event_handle)
 	{
-		if (timer->delay != NULL && timer->repeat != NULL)
+		if (timer->delay && timer->repeat)
 		{
 			printf("Can't specify both a timer delay and a repeat period for timer %s\n", timer->name);
 			dx_terminate(DX_ExitCode_Create_Timer_Failed);
+			
+			pthread_mutex_unlock(&mutex);
 			return false;
 		}
 
 		init_event_loop();
 
-		if (timer->delay != NULL)
+		if (timer->delay)
 		{
 			timer->event_handle = event_new(base, -1, 0, timer->handler, (void *)timer->event_handle);
 			if (timer->event_handle)
 			{
-				timer->_period.tv_sec  = timer->delay->tv_sec;
-				timer->_period.tv_usec = timer->delay->tv_nsec / 1000;
-
-				event_add(timer->event_handle, &timer->_period);
+				event_add(timer->event_handle, &(struct timeval){timer->delay->tv_sec, timer->delay->tv_nsec / 1000});
 			}
 			else
 			{
@@ -58,16 +61,13 @@ bool dx_timerStart(DX_TIMER_BINDING *timer)
 				dx_terminate(DX_ExitCode_Create_Timer_Failed);
 			}
 		}
-		else if (timer->repeat != NULL)
+		else if (timer->repeat)
 		{
 			timer->event_handle =
 				event_new(base, -1, EV_PERSIST, timer->handler, (void *)timer->event_handle);
 			if (timer->event_handle)
 			{
-				timer->_period.tv_sec  = timer->repeat->tv_sec;
-				timer->_period.tv_usec = timer->repeat->tv_nsec / 1000;
-
-				event_add(timer->event_handle, &timer->_period);
+				event_add(timer->event_handle, &(struct timeval){timer->repeat->tv_sec, timer->repeat->tv_nsec / 1000});
 			}
 			else
 			{
@@ -85,6 +85,8 @@ bool dx_timerStart(DX_TIMER_BINDING *timer)
 			}
 		}
 	}
+
+	pthread_mutex_unlock(&mutex);
 	return true;
 }
 
@@ -101,8 +103,9 @@ void dx_timerSetStart(DX_TIMER_BINDING *timerSet[], size_t timerCount)
 
 void dx_timerStop(DX_TIMER_BINDING *timer)
 {
-	if (timer->event_handle != NULL)
+	if (timer->event_handle)
 	{
+		event_del(timer->event_handle);
 		event_free(timer->event_handle);
 		timer->event_handle = NULL;
 	}
@@ -131,7 +134,7 @@ bool dx_timerStateSet(DX_TIMER_BINDING *timer, bool state)
 
 void dx_timerEventLoopStop(void)
 {
-	if (!base)
+	if (base)
 	{
 		event_base_free(base);
 	}
@@ -139,19 +142,22 @@ void dx_timerEventLoopStop(void)
 
 bool dx_timerOneShotSet(DX_TIMER_BINDING *timer, const struct timespec *period)
 {
-	if (timer->event_handle != NULL && period != NULL)
+	bool result = false;
+	pthread_mutex_lock(&mutex);
+	
+	if (timer->event_handle && period)
 	{
-		timer->_period.tv_sec  = period->tv_sec;
-		timer->_period.tv_usec = period->tv_nsec / 1000;
-
-		if (event_add(timer->event_handle, &timer->_period))
+		if (event_add(timer->event_handle, &(struct timeval){period->tv_sec, period->tv_nsec / 1000}))
 		{
 			printf("Error setting oneshot timer\n");
-		}
-
-		return true;
+			result = false;
+		} else {
+			result = true;
+		}		
 	}
-	return false;
+
+	pthread_mutex_unlock(&mutex);
+	return result;
 }
 
 int ConsumeEventLoopTimerEvent(EventLoopTimer *eventLoopTimer)
