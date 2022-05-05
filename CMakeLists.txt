@@ -112,8 +112,8 @@ endif()
 
 
 target_link_libraries (${PROJECT_NAME}
-    # uv
-    event_core 
+    uv
+    # event_core 
     pthread
     iothub_client
     umqtt

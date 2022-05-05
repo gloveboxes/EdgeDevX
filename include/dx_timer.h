@@ -1,20 +1,22 @@
 #pragma once
 
 #include "dx_terminate.h"
-#include <event2/event.h>
-#include <event2/event_struct.h>
-#include <pthread.h>
+// #include <event2/event.h>
+// #include <event2/event_struct.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <pthread.h>
+#include <uv.h>
 
 #define DX_TIMER_HANDLER(name)                                   \
-    void name(evutil_socket_t fd, short event, void *arg)        \
+    void name(EventLoopTimer *eventLoopTimer)         \
     {                                                            \
-        if (ConsumeEventLoopTimerEvent(arg) != 0)                \
+        dx_Log_Debug("Func %s\n", __func__);                     \
+        if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0)     \
         {                                                        \
             dx_terminate(DX_ExitCode_ConsumeEventLoopTimeEvent); \
             return;                                              \
@@ -22,18 +24,19 @@
 
 #define DX_TIMER_HANDLER_END }
 
-#define DX_DECLARE_TIMER_HANDLER(name) void name(evutil_socket_t fd, short event, void *arg)
+#define DX_DECLARE_TIMER_HANDLER(name) \
+    void name(EventLoopTimer *eventLoopTimer)
 
-typedef struct event EventLoopTimer;
+typedef uv_timer_t EventLoopTimer;
 typedef struct timespec timespec;
 
-typedef struct
-{
-    void (*handler)(evutil_socket_t fd, short event, void *arg);
+typedef struct {
+    void (*handler)(uv_timer_t *handle);
     struct timespec *delay;
     struct timespec *repeat;
     const char *name;
-    EventLoopTimer *event_handle;
+    bool initialized;
+    uv_timer_t timer_handle;
 } DX_TIMER_BINDING;
 
 int ConsumeEventLoopTimerEvent(EventLoopTimer *eventLoopTimer);
