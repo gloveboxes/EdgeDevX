@@ -5,6 +5,7 @@ PROJECT(edge_devx C)
 # Source groups
 ################################################################################
 set(Source
+    "./src/dx_async.c"
     "./src/dx_avnet_iot_connect.c"
     "./src/dx_azure_iot.c"
     "./src/dx_config.c"
