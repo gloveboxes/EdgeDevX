@@ -10,7 +10,7 @@
 
 #define DX_ASYNC_HANDLER_END }
 
-#define DX_DECLARE_TIMER_ASYNC_HANDLER(name) void name(uv_async_t *handle)
+#define DX_DECLARE_ASYNC_HANDLER(name) void name(uv_async_t *handle)
 
 typedef struct
 {
