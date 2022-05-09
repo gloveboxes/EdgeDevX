@@ -14,6 +14,7 @@
 
 typedef struct
 {
+	char *name;
 	uv_async_t async;
 	void (*handler)(uv_async_t *handle);
 } DX_ASYNC_BINDING;
