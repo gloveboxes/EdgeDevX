@@ -12,6 +12,7 @@ set(Source
     "./src/dx_device_twins.c"
     "./src/dx_direct_methods.c"
     "./src/dx_json_serializer.c"
+    "./src/log.c"
     "./src/dx_terminate.c"
     "./src/dx_timer.c"
     "./src/dx_utilities.c"
@@ -20,16 +21,16 @@ set(Source
 source_group("Source" FILES ${Source})
 
 # Enable or disable RemoteX Peripheral support
-if (ENABLE_EDGE_DEVX_REMOTEX)
-
-    set(Peripherals
-        "./src/dx_gpio.c"
-        "./src/dx_i2c.c"
-        "./src/dx_pwm.c"
-    )
-    source_group("Peripherals" FILES ${Peripherals})
-
-endif(ENABLE_EDGE_DEVX_REMOTEX)
+#if (ENABLE_EDGE_DEVX_REMOTEX)
+#
+#    set(Peripherals
+#        "./src/dx_gpio.c"
+#        "./src/dx_i2c.c"
+#        "./src/dx_pwm.c"
+#    )
+#    source_group("Peripherals" FILES ${Peripherals})
+#
+#endif(ENABLE_EDGE_DEVX_REMOTEX)
 
 set(ALL_FILES
     ${Source}
@@ -42,13 +43,13 @@ set(ALL_FILES
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
 # Enable or disable RemoteX Peripheral support
-if (ENABLE_EDGE_DEVX_REMOTEX)
-    message(STATUS "RemoteX Peripherals Enabled")
-    # Following line required for Azure Sphere RemoteX Client library
-    target_include_directories(${PROJECT_NAME} PUBLIC ../AzureSphereRemoteX )
-else (ENABLE_EDGE_DEVX_REMOTEX)
-    message(STATUS "RemoteX Peripherals Disabled")
-endif(ENABLE_EDGE_DEVX_REMOTEX)
+#if (ENABLE_EDGE_DEVX_REMOTEX)
+#    message(STATUS "RemoteX Peripherals Enabled")
+#    # Following line required for Azure Sphere RemoteX Client library
+#    target_include_directories(${PROJECT_NAME} PUBLIC ../AzureSphereRemoteX )
+#else (ENABLE_EDGE_DEVX_REMOTEX)
+#    message(STATUS "RemoteX Peripherals Disabled")
+#endif(ENABLE_EDGE_DEVX_REMOTEX)
 
 # Set options for Azure IoT SDK C lib
 set(use_amqp OFF CACHE  BOOL "Set amqp off" FORCE )
@@ -62,13 +63,13 @@ add_subdirectory(azure-iot-sdk-c out)
 
 
 # Enable or disable RemoteX Peripheral support
-if (ENABLE_EDGE_DEVX_REMOTEX)
-    # ################################################################################
-    # # The following line required for the AzureSphereRemoteX.Client library
-    add_subdirectory("AzureSphereRemoteX" applibs)
-    target_link_libraries(${PROJECT_NAME} applibs)
-    # ################################################################################
-endif(ENABLE_EDGE_DEVX_REMOTEX)
+#if (ENABLE_EDGE_DEVX_REMOTEX)
+#    # ################################################################################
+#    # # The following line required for the AzureSphereRemoteX.Client library
+#    add_subdirectory("AzureSphereRemoteX" applibs)
+#    target_link_libraries(${PROJECT_NAME} applibs)
+#    # ################################################################################
+#endif(ENABLE_EDGE_DEVX_REMOTEX)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
