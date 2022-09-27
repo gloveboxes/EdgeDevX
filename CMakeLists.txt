@@ -34,7 +34,7 @@ source_group("Source" FILES ${Source})
 
 set(ALL_FILES
     ${Source}
-    ${Peripherals}
+    # ${Peripherals}
 )
 
 ################################################################################
