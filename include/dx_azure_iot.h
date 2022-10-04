@@ -3,25 +3,13 @@
 
 #pragma once
 
-#include "azure_prov_client/prov_client_const.h"
-#include "azure_prov_client/prov_device_ll_client.h"
-#include "azure_prov_client/prov_security_factory.h"
-#include "azure_prov_client/prov_transport.h"
-#include "azure_prov_client/prov_transport_mqtt_client.h"
+#include <stdbool.h>
+#include <stddef.h>
 #include "dx_config.h"
-#include "dx_terminate.h"
-#include "dx_timer.h"
-#include "dx_utilities.h"
-#include "iothub.h"
+#include "dx_exit_codes.h"
+
 #include "iothub_client_core_common.h"
-#include "iothub_client_options.h"
-#include "iothubtransportmqtt.h"
-#include <azure_prov_client/iothub_security_factory.h>
-#include <errno.h>
 #include <iothub_device_client_ll.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
 
 #ifndef IOT_HUB_POLL_TIME_SECONDS

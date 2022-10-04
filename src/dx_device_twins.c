@@ -3,6 +3,12 @@
 
 #include "dx_device_twins.h"
 
+#include "dx_azure_iot.h"
+#include "dx_terminate.h"
+#include "parson.h"
+#include <stdlib.h>
+
+
 static bool deviceTwinReportState(DX_DEVICE_TWIN_BINDING *deviceTwinBinding, void *state,
                                   bool deviceTwinPnPAcknowledgment,
                                   DX_DEVICE_TWIN_RESPONSE_CODE statusCode);

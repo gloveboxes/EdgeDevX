@@ -3,6 +3,13 @@
 
 #include "dx_config.h"
 
+#include "dx_terminate.h"
+#include "dx_utilities.h"
+#include <ctype.h>
+#include <getopt.h>
+#include <stdio.h>
+#include <string.h>
+
 // Usage text for command line arguments in application manifest.
 static const char *cmdLineArgsUsageText =
     "DPS connection type: \"CmdArgs:\" -s \"<your_scope_id>\" -d \"<your_device_id>\" -k \"<your_device_key>\"\n"

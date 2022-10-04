@@ -3,10 +3,9 @@
 
 #pragma once
 
-#include "dx_utilities.h"
-#include "stdbool.h"
 #include "applibs/pwm.h"
-#include <unistd.h>
+#include "stdbool.h"
+
 
 typedef struct DX_PWM_CONTROLLER {
     int fd;

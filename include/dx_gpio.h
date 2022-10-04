@@ -1,14 +1,9 @@
 #pragma once
 
-#include "dx_terminate.h"
-#include "dx_utilities.h"
-#include <errno.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include "applibs/gpio.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 // typedef int GPIO_Value_Type;
 // typedef bool GPIO_Value;

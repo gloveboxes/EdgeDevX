@@ -1,4 +1,6 @@
 #include "dx_async.h"
+#include "dx_terminate.h"
+#include <stdbool.h>
 
 // http://docs.libuv.org/en/v1.x/async.html
 

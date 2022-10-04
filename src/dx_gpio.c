@@ -3,6 +3,16 @@
 
 #include "dx_gpio.h"
 
+#include "dx_terminate.h"
+#include "dx_utilities.h"
+#include <errno.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+
 bool dx_gpioOpen(DX_GPIO_BINDING *peripheral)
 {
     if (peripheral == NULL || peripheral->pin < 0) {

@@ -1,5 +1,11 @@
 #include "dx_timer.h"
 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+
 bool dx_timerChange(DX_TIMER_BINDING *timer, const struct timespec *repeat)
 {
 	if (!timer->initialized)

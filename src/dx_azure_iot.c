@@ -1,5 +1,14 @@
 #include "dx_azure_iot.h"
 
+#include "azure_prov_client/prov_device_ll_client.h"
+#include "azure_prov_client/prov_security_factory.h"
+#include "azure_prov_client/prov_transport_mqtt_client.h"
+#include "dx_timer.h"
+#include "dx_utilities.h"
+#include "iothub.h"
+#include "iothub_client_options.h"
+#include "iothubtransportmqtt.h"
+
 #define MAX_CONNECTION_STATUS_CALLBACKS 5
 
 static bool SetUpAzureIoTHubClientWithConnectionString(void);

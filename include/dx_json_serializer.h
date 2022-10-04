@@ -1,11 +1,7 @@
 #pragma once
 
-#include "dx_utilities.h"
-#include "parson.h"
-#include "stdarg.h"
-#include "stdbool.h"
-#include "stdio.h"
-#include "string.h"
+#include <stdbool.h>
+#include <stddef.h>
 
 typedef enum {
 	DX_JSON_BOOL,

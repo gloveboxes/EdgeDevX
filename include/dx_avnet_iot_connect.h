@@ -22,21 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
-// #include <applibs/log.h>
-
-// #include "applibs_versions.h"
-#include "iothub_device_client_ll.h"
-#include "parson.h"
-
-#include "dx_exit_codes.h"
-#include "dx_azure_iot.h"
-#include "dx_timer.h"
-#include "dx_json_serializer.h" // for DX_JSON_TYPE enum
-#include "dx_utilities.h"
-#include "dx_azure_iot.h"
+#include <stdbool.h>
+#include <stddef.h>
 #include "dx_config.h"
 
 #define DX_AVNET_IOT_CONNECT_GUID_LEN 36

@@ -2,11 +2,6 @@
 
 #include "dx_terminate.h"
 #include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
 #include <uv.h>
 
 #define DX_TIMER_HANDLER(name)                \

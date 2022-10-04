@@ -1,21 +1,8 @@
 #pragma once
 
-#include "dx_timer.h"
-#include <ctype.h>
-#include <curl/curl.h>
-#include <curl/easy.h>
-#include <errno.h>
-#include <ifaddrs.h>
-#include <pthread.h>
-#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <time.h>
+#include <stddef.h>
 
 #define ONE_MS 1000000
 #define NELEMS(x) (sizeof(x) / sizeof((x)[0]))

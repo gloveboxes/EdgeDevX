@@ -3,6 +3,12 @@
 
 #include "dx_i2c.h"
 
+#include "applibs/i2c.h"
+#include "dx_terminate.h"
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+
 bool dx_i2cOpen(DX_I2C_BINDING *i2c_binding)
 {
     if (i2c_binding->opened) {

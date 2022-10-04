@@ -1,11 +1,8 @@
 #pragma once
 
-#include "dx_terminate.h"
-#include <errno.h>
 #include <stdbool.h>
-#include <string.h>
-#include <unistd.h>
-#include "applibs/i2c.h"
+#include <stddef.h>
+#include <stdint.h>
 
 typedef int I2C_InterfaceId;
 

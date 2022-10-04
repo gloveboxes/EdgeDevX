@@ -2,12 +2,7 @@
    Licensed under the MIT License. */
 
 #pragma once
-
-#include "dx_terminate.h"
-#include "dx_utilities.h"
-#include <ctype.h>
-#include <getopt.h>
-#include <string.h>
+#include <stdbool.h>
 
 /// <summary>
 /// Connection types to use when connecting to the Azure IoT Hub.

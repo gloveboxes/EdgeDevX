@@ -21,6 +21,14 @@ SOFTWARE.
 
 #include "dx_avnet_iot_connect.h"
 
+#include "azure_prov_client/prov_transport_mqtt_client.h"
+#include "dx_azure_iot.h"
+#include "dx_json_serializer.h" // for DX_JSON_TYPE enum
+#include "dx_timer.h"
+#include "dx_utilities.h"
+#include "parson.h"
+#include <stdarg.h>
+
 // This file implements the logic required to connect and interface with Avnet's IoTConnect cloud platform
 // https://www.avnet.com/wps/portal/us/solutions/iot/software/iot-platform/
 

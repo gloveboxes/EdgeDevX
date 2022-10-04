@@ -3,9 +3,8 @@
 
 #pragma once
 
-#include "dx_azure_iot.h"
-#include "parson.h"
-#include <iothub_device_client_ll.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #define DX_DEVICE_TWIN_HANDLER(name, deviceTwinBinding) \
 	void name(DX_DEVICE_TWIN_BINDING *deviceTwinBinding)      \

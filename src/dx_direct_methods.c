@@ -3,6 +3,11 @@
 
 #include "dx_direct_methods.h"
 
+#include "dx_azure_iot.h"
+#include <stdlib.h>
+
+
+
 static int DirectMethodCallbackHandler(const char *method_name, const unsigned char *payload, size_t payloadSize,
                                        unsigned char **responsePayload, size_t *responsePayloadSize, void *userContextCallback);
 

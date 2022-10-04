@@ -1,5 +1,11 @@
 #include "dx_json_serializer.h"
 
+#include "dx_utilities.h"
+#include "parson.h"
+#include "stdarg.h"
+#include "stdio.h"
+#include "string.h"
+
 bool dx_jsonSerialize(char *buffer, size_t buffer_size, int key_value_pair_count, ...)
 {
     JSON_Value *root_value = json_value_init_object();

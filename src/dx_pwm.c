@@ -1,5 +1,10 @@
 #include "dx_pwm.h"
 
+#include "dx_utilities.h"
+#include "stdbool.h"
+#include "applibs/pwm.h"
+#include <unistd.h>
+
 bool dx_pwmSetDutyCycle(DX_PWM_BINDING *pwmBinding, uint32_t hertz, uint32_t dutyCyclePercentage)
 {
     if (pwmBinding->pwmController->initialized && IN_RANGE(dutyCyclePercentage, 0, 100) && IN_RANGE(hertz, 0, 100000)) {

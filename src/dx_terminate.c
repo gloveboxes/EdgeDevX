@@ -1,5 +1,10 @@
 #include "dx_terminate.h"
 
+#include <dx_timer.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <string.h>
+
 static volatile sig_atomic_t _exitCode = 0;
 
 static void dx_terminationHandler(int signalNumber)

@@ -1,5 +1,20 @@
 #include "dx_utilities.h"
 
+#include "dx_timer.h"
+#include <ctype.h>
+#include <curl/curl.h>
+#include <curl/easy.h>
+#include <errno.h>
+#include <ifaddrs.h>
+#include <pthread.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <time.h>
+
 static char *_log_debug_buffer = NULL;
 static size_t _log_debug_buffer_size;
 static volatile bool network_timer_initialised = false;
