@@ -20,36 +20,27 @@ set(Source
 )
 source_group("Source" FILES ${Source})
 
-# Enable or disable RemoteX Peripheral support
-#if (ENABLE_EDGE_DEVX_REMOTEX)
-#
-#    set(Peripherals
-#        "./src/dx_gpio.c"
-#        "./src/dx_i2c.c"
-#        "./src/dx_pwm.c"
-#    )
-#    source_group("Peripherals" FILES ${Peripherals})
-#
-#endif(ENABLE_EDGE_DEVX_REMOTEX)
+# Support for gpio on Linux
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+   message(STATUS "EdgeDevX Peripherals Enabled")
+
+   set(Peripherals
+       "./src/dx_gpio.c"
+    #    "./src/dx_i2c.c"
+    #    "./src/dx_pwm.c"
+   )
+   source_group("Peripherals" FILES ${Peripherals})
+endif()
 
 set(ALL_FILES
     ${Source}
-    # ${Peripherals}
+    ${Peripherals}
 )
 
 ################################################################################
 # Target
 ################################################################################
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
-
-# Enable or disable RemoteX Peripheral support
-#if (ENABLE_EDGE_DEVX_REMOTEX)
-#    message(STATUS "RemoteX Peripherals Enabled")
-#    # Following line required for Azure Sphere RemoteX Client library
-#    target_include_directories(${PROJECT_NAME} PUBLIC ../AzureSphereRemoteX )
-#else (ENABLE_EDGE_DEVX_REMOTEX)
-#    message(STATUS "RemoteX Peripherals Disabled")
-#endif(ENABLE_EDGE_DEVX_REMOTEX)
 
 # Set options for Azure IoT SDK C lib
 set(use_amqp OFF CACHE  BOOL "Set amqp off" FORCE )
@@ -60,16 +51,6 @@ set(use_prov_client ON CACHE  BOOL "Use prov client" FORCE )
 
 # Add Azure IoT SDK C
 add_subdirectory(azure-iot-sdk-c out)
-
-
-# Enable or disable RemoteX Peripheral support
-#if (ENABLE_EDGE_DEVX_REMOTEX)
-#    # ################################################################################
-#    # # The following line required for the AzureSphereRemoteX.Client library
-#    add_subdirectory("AzureSphereRemoteX" applibs)
-#    target_link_libraries(${PROJECT_NAME} applibs)
-#    # ################################################################################
-#endif(ENABLE_EDGE_DEVX_REMOTEX)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
@@ -95,21 +76,16 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm64")
         target_include_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/include)
         target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/lib)
-
-        # set(ENV{PKG_CONFIG_PATH} "/opt/homebrew/opt/openssl@3/lib/pkgconfig")
-        # find_package(PkgConfig REQUIRED)
-        # find_package(OpenSSL REQUIRED)
     else()
     # macOS on Intel
         target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
         target_link_directories(${PROJECT_NAME} PUBLIC /usr/local/lib)
-
-        # set(ENV{PKG_CONFIG_PATH} "/usr/local/opt/openssl@3/lib/pkgconfig")
-        # find_package(PkgConfig REQUIRED)
-        # find_package(OpenSSL REQUIRED)
     endif()
-else()
-    # target_link_libraries (${PROJECT_NAME} ssl crypto)
+endif()
+
+# required for dx_gpio on linux support
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    target_link_libraries (${PROJECT_NAME} gpiod)
 endif()
 
 
