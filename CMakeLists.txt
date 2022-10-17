@@ -1,24 +1,36 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.8)
 PROJECT(edge_devx C)
 
+# AZURE_IOT_SUPPORT Variable can be set to ON or OFF by inheriting CMakeLists.txt
+set(AZURE_IOT_SUPPORT ON CACHE BOOL "Enable Azure Cloud support for the project" )
+
 ################################################################################
 # Source groups
 ################################################################################
 set(Source
     "./src/dx_async.c"
-    "./src/dx_avnet_iot_connect.c"
-    "./src/dx_azure_iot.c"
-    "./src/dx_config.c"
-    "./src/dx_device_twins.c"
-    "./src/dx_direct_methods.c"
     "./src/dx_json_serializer.c"
-    "./src/log.c"
     "./src/dx_terminate.c"
     "./src/dx_timer.c"
     "./src/dx_utilities.c"
+    "./src/log.c"
     "./src/parson.c"
 )
 source_group("Source" FILES ${Source})
+
+if(AZURE_IOT_SUPPORT)
+    message(STATUS "Azure IoT Central/Hub Support Enabled")
+
+    set(Cloud 
+        "./src/dx_avnet_iot_connect.c"
+        "./src/dx_azure_iot.c"
+        "./src/dx_config.c"   
+        "./src/dx_device_twins.c"
+        "./src/dx_direct_methods.c"
+    )
+    source_group("Cloud" FILES ${Cloud})
+
+endif()
 
 # Support for gpio on Linux
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
@@ -35,6 +47,7 @@ endif()
 set(ALL_FILES
     ${Source}
     ${Peripherals}
+    ${Cloud}
 )
 
 ################################################################################
@@ -42,26 +55,44 @@ set(ALL_FILES
 ################################################################################
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
-# Set options for Azure IoT SDK C lib
-set(use_amqp OFF CACHE  BOOL "Set amqp off" FORCE )
-set(use_http OFF CACHE  BOOL "Set http off" FORCE )
-set(use_mqtt ON CACHE  BOOL "Set http off" FORCE )
-set(skip_samples ON CACHE  BOOL "Skip samples" FORCE )
-set(use_prov_client ON CACHE  BOOL "Use prov client" FORCE )
-
-# Add Azure IoT SDK C
-add_subdirectory(azure-iot-sdk-c out)
-
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
-set(ROOT_NAMESPACE rpi_libs)
-set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_KEYWORD "EdgeDevX")
+# set(ROOT_NAMESPACE rpi_libs)
+# set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_KEYWORD "EdgeDevX")
 
-target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/iothub_client/inc)
-target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/provisioning_client/inc)
-target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/c-utility/inc)
-target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/umock-c/inc)
-target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/azure-macro-utils-c/inc)
+if(AZURE_IOT_SUPPORT)
+
+    # Set options for Azure IoT SDK C lib
+    set(use_amqp OFF CACHE  BOOL "Set amqp off" FORCE )
+    set(use_http OFF CACHE  BOOL "Set http off" FORCE )
+    set(use_mqtt ON CACHE  BOOL "Set http off" FORCE )
+    set(skip_samples ON CACHE  BOOL "Skip samples" FORCE )
+    set(use_prov_client ON CACHE  BOOL "Use prov client" FORCE )
+
+    # Add Azure IoT SDK C
+    add_subdirectory(azure-iot-sdk-c out)
+
+    target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/iothub_client/inc)
+    target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/provisioning_client/inc)
+    target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/c-utility/inc)
+    target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/umock-c/inc)
+    target_include_directories(${PROJECT_NAME} PUBLIC azure-iot-sdk-c/deps/azure-macro-utils-c/inc)
+
+    target_link_libraries (${PROJECT_NAME} 
+        aziotsharedutil
+        hsm_security_client
+        iothub_client
+        parson
+        prov_auth_client
+        prov_device_ll_client
+        prov_mqtt_transport
+        umqtt
+        )
+
+endif()
+
+
+
 
 #
 # The following config was required for macOS homebrew installed UV, UUID and SSL libs
@@ -90,20 +121,10 @@ endif()
 
 
 target_link_libraries (${PROJECT_NAME}
-    uv
-    # event_core 
-    pthread
-    iothub_client
-    umqtt
-    prov_auth_client
-    hsm_security_client
-    # uhttp
-    aziotsharedutil
-    parson
-    uuid
-    pthread
     curl
     m
-    prov_device_ll_client
-    prov_mqtt_transport
+    pthread
+    pthread
+    uuid
+    uv
 )
