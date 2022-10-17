@@ -87,26 +87,26 @@ if(AZURE_IOT_SUPPORT)
         umqtt
         )
 
-    #
-    # The following config was required for macOS homebrew installed UV, UUID and SSL libs
-    # Install brew
-    # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    #
-    # Install required libraries
-    # brew install mosquitto libuv openssl ossp-uuid
-    #
-    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        # macOS on Apple silicon (arm64)
-        if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm64")
-            target_include_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/include)
-            target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/lib)
-        else()
-        # macOS on Intel
-            target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
-            target_link_directories(${PROJECT_NAME} PUBLIC /usr/local/lib)
-        endif()
-    endif()
+endif()
 
+#
+# The following config was required for macOS homebrew installed UV, UUID and SSL libs
+# Install brew
+# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#
+# Install required libraries
+# brew install mosquitto libuv openssl ossp-uuid
+#
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    # macOS on Apple silicon (arm64)
+    if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm64")
+        target_include_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/include)
+        target_link_directories(${PROJECT_NAME} PUBLIC /opt/homebrew/lib)
+    else()
+    # macOS on Intel
+        target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
+        target_link_directories(${PROJECT_NAME} PUBLIC /usr/local/lib)
+    endif()
 endif()
 
 # required for dx_gpio on linux support
