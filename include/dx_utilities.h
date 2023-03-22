@@ -25,7 +25,7 @@ bool dx_isStringNullOrEmpty(const char *string);
 /// <returns></returns>
 bool dx_isStringPrintable(char *data);
 
-bool dx_startThreadDetached(void *(daemon)(void *), void *arg, char *daemon_name);
+bool dx_startThreadDetached(void *(*daemon)(void *), void *arg, char *daemon_name);
 char *dx_getCurrentUtc(char *buffer, size_t bufferSize);
 char *dx_getHttpData(const char *url, long timeout);
 char *dx_getLocalTime(char *buffer, size_t bufferSize);
