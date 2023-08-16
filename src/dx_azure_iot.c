@@ -1,3 +1,6 @@
+/* Copyright (c) Microsoft Corporation. All rights reserved.
+   Licensed under the MIT License. */
+
 #include "dx_azure_iot.h"
 
 #include "azure_prov_client/prov_device_ll_client.h"

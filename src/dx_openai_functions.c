@@ -1,3 +1,6 @@
+/* Copyright (c) Microsoft Corporation. All rights reserved.
+   Licensed under the MIT License. */
+
 #include "dx_openai_functions.h"
 #include "parson.h"
 #include "string.h"

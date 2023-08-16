@@ -1,3 +1,6 @@
+/* Copyright (c) Microsoft Corporation. All rights reserved.
+   Licensed under the MIT License. */
+
 #include "dx_async.h"
 #include "dx_terminate.h"
 #include <stdbool.h>
