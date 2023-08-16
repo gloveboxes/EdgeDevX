@@ -216,7 +216,7 @@ cleanup:
     }
 }
 
-void dx_openai_function_message_update(DX_OPENAI_FUNCTION_CTX *ctx)
+void dx_openai_function_post_request(DX_OPENAI_FUNCTION_CTX *ctx)
 {
     JSON_Value *root_value = NULL;
     JSON_Value *new_value = NULL;

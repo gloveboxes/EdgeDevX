@@ -13,4 +13,4 @@ typedef struct
 
 void dx_openai_function_free(DX_OPENAI_FUNCTION_CTX *ctx);
 void dx_openai_function_init(DX_OPENAI_FUNCTION_CTX *ctx, const char *filename, const char *openai_api_key);
-void dx_openai_function_message_update(DX_OPENAI_FUNCTION_CTX *ctx);
+void dx_openai_function_post_request(DX_OPENAI_FUNCTION_CTX *ctx);
