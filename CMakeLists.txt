@@ -15,6 +15,8 @@ set(Source
     "./src/dx_utilities.c"
     "./src/log.c"
     "./src/parson.c"
+    "./src/dx_openai_functions.c"
+
 )
 source_group("Source" FILES ${Source})
 
