@@ -1,4 +1,1 @@
-[submodule "azure-iot-sdk-c"]
-	path = test
-	url = https://github.com/Azure/azure-iot-sdk-c.git
-	branch = lts_08_2023
+
